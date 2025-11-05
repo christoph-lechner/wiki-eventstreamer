@@ -10,27 +10,33 @@
 import json
 from requests_sse import EventSource
 
-# Info: Wikipedia blocks Python scripts -> gives 403
-# Fake Firefox -> gives 200
-# self._kwargs['headers']['User-Agent']='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
+def cb_demo_user(change):
+    # print(change)
+    if 'user' in change:
+        if change['user'] == 'Yourname':
+            print('special username detected')
+            print(change)
+            last_id = event.last_event_id
+            print(last_id)
 
-kwargs = dict()
-kwargs['headers'] = dict()
-kwargs['headers']['User-Agent']='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
-url = 'https://stream.wikimedia.org/v2/stream/recentchange'
-last_id = None
-with EventSource(url,**kwargs) as stream:
-    for event in stream:
-        if event.type == 'message':
-            try:
-                change = json.loads(event.data)
-            except ValueError:
-                pass
-            else:
+def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange', cb=None):
+    # Info: Wikipedia blocks Python scripts -> gives 403
+    # Fake Firefox -> gives 200
+    kwargs = dict()
+    kwargs['headers'] = dict()
+    kwargs['headers']['User-Agent']='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
+    #
+    last_id = None
+    with EventSource(url,**kwargs) as stream:
+        for event in stream:
+            if event.type == 'message':
+                try:
+                    change = json.loads(event.data)
+                except ValueError:
+                    continue # next event
+
+                # this prints the *raw* data
                 print(event.data)
-                # discard canary events
-                if change['meta']['domain'] == 'canary':
-                    continue
                 """
                 In very rare cases, expected fields may be missing from the parsed JSON data. On 2025-Nov-05, this script was crashing after a few hours and more than 300000 processed messages with the following exception (crash was reproducible):
                 Traceback (most recent call last):
@@ -38,10 +44,21 @@ with EventSource(url,**kwargs) as stream:
                     if change['user'] == 'Yourname':
                 KeyError: 'user'
                 """
-                if change['user'] == 'Yourname':
-                    print(change)
-                    last_id = event.last_event_id
-                    print(last_id)
+                # discard canary events
+                if 'meta' in change:
+                    if 'domain' in change['meta']:
+                        if change['meta']['domain'] == 'canary':
+                            continue
+
+                # further processing in user-provided callback function
+                cb(change)
+
+
+
+
+
+if __name__=="__main__":
+    get_stream_data(cb=cb_demo_user)
 
 # - Run this Python script.
 # - Publish an edit to [[Sandbox]] on test.wikipedia.org, and observe it getting printed.
