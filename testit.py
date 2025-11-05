@@ -31,6 +31,13 @@ with EventSource(url,**kwargs) as stream:
                 # discard canary events
                 if change['meta']['domain'] == 'canary':
                     continue
+                """
+                In very rare cases, expected fields may be missing from the parsed JSON data. On 2025-Nov-05, this script was crashing after a few hours and more than 300000 processed messages with the following exception (crash was reproducible):
+                Traceback (most recent call last):
+                  File "/home/cl/work/wikitest/./testit.py", line 34, in <module>
+                    if change['user'] == 'Yourname':
+                KeyError: 'user'
+                """
                 if change['user'] == 'Yourname':
                     print(change)
                     last_id = event.last_event_id
