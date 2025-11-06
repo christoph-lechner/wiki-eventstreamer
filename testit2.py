@@ -9,8 +9,10 @@
 
 import json
 from requests_sse import EventSource
+from requests_sse.client import InvalidStatusCodeError
 from my_util import FilenameGen
 import os
+import time
 
 def cb_demo_user(change):
     # print(change)
@@ -29,10 +31,11 @@ def open_outfile(fn):
 def cb_process_raw(event, status):
     if status['fng'].qq():
         fnold = status['fn']
+        fnnew = fnold+'.complete'
         print('Closing file '+fnold)
         status['fout'].close()
-        os.rename(fnold, fnold+'.complete')
-        print('Renamed file (to mark as ready for further processing) '+fnold)
+        os.rename(fnold, fnnew)
+        print('Renamed file (to mark as ready for further processing) -> '+fnnew)
         #
         status['fn'] = status['fng'].getfn()
         status['fout'] = open_outfile(status['fn'])
@@ -40,7 +43,7 @@ def cb_process_raw(event, status):
     status['fout'].write(event.data)
     status['fout'].write('\n')
 
-def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange', cb=None, cb_raw=None):
+def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/xrecentchange', cb=None, cb_raw=None):
     # Info: Wikipedia blocks Python scripts -> gives 403
     # Fake Firefox -> gives 200
     kwargs = dict()
@@ -48,34 +51,38 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
     kwargs['headers']['User-Agent']='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
     #
     last_id = None
-    with EventSource(url,**kwargs) as stream:
-        for event in stream:
-            if event.type == 'message':
-                try:
-                    change = json.loads(event.data)
-                except ValueError:
-                    continue # next event
+    while True:
+        try:
+            with EventSource(url,**kwargs) as stream:
+                for event in stream:
+                    if event.type == 'message':
+                        try:
+                            change = json.loads(event.data)
+                        except ValueError:
+                            continue # next event
 
-                # this prints the *raw* data
-                if cb_raw is not None:
-                    cb_raw(event)
-                """
-                In very rare cases, expected fields may be missing from the parsed JSON data. On 2025-Nov-05, this script was crashing after a few hours and more than 300000 processed messages with the following exception (crash was reproducible):
-                Traceback (most recent call last):
-                  File "/home/cl/work/wikitest/./testit.py", line 34, in <module>
-                    if change['user'] == 'Yourname':
-                KeyError: 'user'
-                """
-                # discard canary events
-                if 'meta' in change:
-                    if 'domain' in change['meta']:
-                        if change['meta']['domain'] == 'canary':
-                            continue
+                        # this prints the *raw* data
+                        if cb_raw is not None:
+                            cb_raw(event)
+                        """
+                        In very rare cases, expected fields may be missing from the parsed JSON data. On 2025-Nov-05, this script was crashing after a few hours and more than 300000 processed messages with the following exception (crash was reproducible):
+                        Traceback (most recent call last):
+                          File "/home/cl/work/wikitest/./testit.py", line 34, in <module>
+                            if change['user'] == 'Yourname':
+                        KeyError: 'user'
+                        """
+                        # discard canary events
+                        if 'meta' in change:
+                            if 'domain' in change['meta']:
+                                if change['meta']['domain'] == 'canary':
+                                    continue
 
-                # further processing in user-provided callback function
-                if cb is not None:
-                    cb(change)
-
+                        # further processing in user-provided callback function
+                        if cb is not None:
+                            cb(change)
+        except InvalidStatusCodeError as e:
+            print(f'EventSource: HTTP status code: {e.status_code}. Retrying...')
+            time.sleep(5)
 
 
 
