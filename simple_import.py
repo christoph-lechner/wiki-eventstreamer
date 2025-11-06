@@ -9,15 +9,12 @@ CREATE TABLE wtbl(
 	event_meta_id TEXT,
 	event_meta_domain TEXT,
     event_id BIGINT,
+	event_type TEXT,
 	event_wiki TEXT,
-    event_title TEXT,
 	event_user TEXT,
-	event_type TEXT
+    event_bot BOOLEAN,
+    event_title TEXT
 );
-"""
-
-"""
-SELECT event_meta_dt,TO_TIMESTAMP(event_meta_dt, 'YYYY-MM-DD T HH24:MI:SS') FROM wtbl LIMIT 10;
 """
 
 # zcat changes__starting20251105T1630_finaltest.txt.gz | head -n 1000000 > events_in.json
@@ -49,8 +46,11 @@ with open('events_in.json','r') as fin:
             print('skipping event: not all fields present')
             continue
 
+        # Extract information from event
+        # See schema in directory schema/
         # Sometimes, not all fields are present
-        # Missing elements in decoded JSON string are replaced by None, resulting in NULL in DB
+        # Missing elements in decoded JSON string are replaced by None,
+        # resulting in NULL in DB
         def my_helper(dict,key):
             if not key in dict:
                 # print(f'N for {key}')
@@ -63,11 +63,12 @@ with open('events_in.json','r') as fin:
         event_wiki = my_helper(event,'wiki')
         event_title = my_helper(event,'title')
         event_user = my_helper(event,'user')
+        event_bot = my_helper(event,'bot')
         event_type = my_helper(event,'type')
 
         # todo: check format string for int value (8-byte int in DB)
-        cur.execute('INSERT INTO wtbl (event_meta_dt,event_meta_id,event_meta_domain,event_id,event_wiki,event_title,event_user,event_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)',
-            (event_meta_dt, event_meta_id, event_meta_domain, event_id, event_wiki, event_title, event_user, event_type))
+        cur.execute('INSERT INTO wtbl (event_meta_dt,event_meta_id,event_meta_domain,event_id,event_type,event_wiki,event_user,event_bot,event_title) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+            (event_meta_dt, event_meta_id, event_meta_domain, event_id, event_type, event_wiki, event_user, event_bot, event_title))
         # break
 
 conn.commit()
