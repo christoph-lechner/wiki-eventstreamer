@@ -34,7 +34,7 @@ with open('events_in.json','r') as fin:
     for l_ in fin:
         linecntr+=1
         if (linecntr%100000)==0:
-            print('.')
+            print('.', end='', flush=True)
         #
         try:
             event = json.loads(l_)
