@@ -90,6 +90,7 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
     last_id = load_checkpoint()
     while True:
         try:
+            # Note 2025-Nov-07: It could be that providing too old checkpointing infos results in HTTP 400...
             with EventSource(url, latest_event_id=last_id, **kwargs) as stream:
                 for event in stream:
                     if event.type == 'message':
