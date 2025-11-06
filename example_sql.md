@@ -1,34 +1,34 @@
 ## top wikis
 ```
 postgres@localhost:postgres> SELECT event_wiki,COUNT(*) FROM wtbl GROUP BY event_wiki ORDER BY COUNT(*) DESC LIMIT 10;
-+--------------+--------+
-| event_wiki   | count  |
-|--------------+--------|
-| commonswiki  | 401842 |
-| wikidatawiki | 239365 |
-| enwiki       | 93081  |
-| cewiki       | 32790  |
-| ruwikinews   | 20397  |
-| frwiki       | 18280  |
-| ukwiki       | 13944  |
-| ckbwiki      | 12733  |
-| dewiki       | 12587  |
-| ruwiki       | 11440  |
-+--------------+--------+
++--------------+---------+
+| event_wiki   | count   |
+|--------------+---------|
+| commonswiki  | 1216270 |
+| wikidatawiki | 579388  |
+| enwiki       | 327960  |
+| cewiki       | 89457   |
+| ruwikinews   | 69451   |
+| frwiki       | 45425   |
+| ckbwiki      | 41283   |
+| ruwiki       | 38411   |
+| dewiki       | 33899   |
+| ukwiki       | 31065   |
++--------------+---------+
 ```
 
 ## types of events
 ```
 postgres@localhost:postgres> SELECT event_type,COUNT(*) FROM wtbl GROUP BY event_type ORDER BY COUNT(*) DESC;
-+------------+--------+
-| event_type | count  |
-|------------+--------|
-| edit       | 537744 |
-| categorize | 370772 |
-| log        | 67757  |
-| new        | 23692  |
-| <null>     | 35     |
-+------------+--------+
++------------+---------+
+| event_type | count   |
+|------------+---------|
+| edit       | 1507772 |
+| categorize | 1149944 |
+| log        | 211157  |
+| new        | 75872   |
+| <null>     | 114     |
++------------+---------+
 ```
 
 ## temporal edit distribution for dewiki
@@ -48,6 +48,34 @@ GROUP BY
    DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
 ORDER BY
    DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt);
++------------+------+-------+
+| date       | hour | count |
+|------------+------+-------|
+| 2025-11-05 | 16   | 1300  |
+| 2025-11-05 | 17   | 1314  |
+| 2025-11-05 | 18   | 1371  |
+| 2025-11-05 | 19   | 1327  |
+| 2025-11-05 | 20   | 1204  |
+| 2025-11-05 | 21   | 1028  |
+| 2025-11-05 | 22   | 908   |
+| 2025-11-05 | 23   | 645   |
+| 2025-11-06 | 0    | 423   |
+| 2025-11-06 | 1    | 304   |
+| 2025-11-06 | 2    | 280   |
+| 2025-11-06 | 3    | 483   |
+| 2025-11-06 | 4    | 433   |
+| 2025-11-06 | 5    | 779   |
+| 2025-11-06 | 6    | 971   |
+| 2025-11-06 | 7    | 1309  |
+| 2025-11-06 | 8    | 1285  |
+| 2025-11-06 | 9    | 1126  |
+| 2025-11-06 | 10   | 1408  |
+| 2025-11-06 | 11   | 1187  |
+| 2025-11-06 | 12   | 1038  |
+| 2025-11-06 | 13   | 1295  |
+| 2025-11-06 | 14   | 1394  |
+| 2025-11-06 | 15   | 1344  |
++------------+------+-------+
 ```
 
 ## top pages
@@ -68,16 +96,16 @@ LIMIT 10;
 +--------------------------------------------------------+-------+
 | event_title                                            | count |
 |--------------------------------------------------------+-------|
-| UPS Airlines Flight 2976                               | 142   |
-| Wikipedia:In the news/Candidates                       | 132   |
-| Zohran Mamdani                                         | 87    |
-| Wikipedia:Sandbox                                      | 82    |
-| Wikipedia:Administrators' noticeboard/Incidents        | 82    |
-| Wikipedia:Administrator intervention against vandalism | 74    |
-| List of acts of the Parliament of Northern Ireland     | 68    |
-| User:Eurodog/sandbox473                                | 66    |
-| Template:Zionism UK                                    | 58    |
-| Dennis Harrison                                        | 51    |
+| UPS Airlines Flight 2976                               | 380   |
+| Wikipedia:In the news/Candidates                       | 311   |
+| Wikipedia:Administrator intervention against vandalism | 219   |
+| Wikipedia:Sandbox                                      | 214   |
+| Zohran Mamdani                                         | 212   |
+| Wikipedia:Administrators' noticeboard/Incidents        | 190   |
+| Wikipedia:Requests for page protection/Increase        | 174   |
+| 2025 New York City mayoral election                    | 148   |
+| User:AmandaNP/UAA/Time                                 | 145   |
+| Talk:UPS Airlines Flight 2976                          | 122   |
 +--------------------------------------------------------+-------+
 ```
 
@@ -104,6 +132,11 @@ ORDER BY
 | 2025-11-05 | 17   | 13    |
 | 2025-11-05 | 18   | 17    |
 | 2025-11-05 | 19   | 3     |
-| 2025-11-05 | 22   | 8     |
+| 2025-11-05 | 22   | 17    |
+| 2025-11-05 | 23   | 18    |
+| 2025-11-06 | 0    | 2     |
+| 2025-11-06 | 8    | 3     |
+| 2025-11-06 | 9    | 3     |
+| 2025-11-06 | 11   | 4     |
 +------------+------+-------+
 ```

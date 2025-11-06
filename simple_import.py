@@ -20,11 +20,16 @@ CREATE TABLE wtbl(
 # zcat changes__starting20251105T1630_finaltest.txt.gz | head -n 1000000 > events_in.json
 # ./simple_import.py
 
-conn = psycopg.connect(dbname = 'postgres', 
+#conn = psycopg.connect(dbname = 'postgres', 
+#                       user = 'postgres', 
+#                       host= 'localhost',
+#                       password = "postgres",
+#                       port = 5432)
+conn = psycopg.connect(dbname = 'wikidb', 
                        user = 'postgres', 
                        host= 'localhost',
                        password = "postgres",
-                       port = 5432)
+                       port = 15432)
 
 # obtain cursor to perform database operations
 cur = conn.cursor()

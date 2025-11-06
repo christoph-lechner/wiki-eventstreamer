@@ -21,11 +21,16 @@ CREATE TABLE wtbl(
 # zcat changes__starting20251105T1630_finaltest.txt.gz | head -n 1000000 > events_in.json
 # ./simple_import.py
 
-conn = psycopg.connect(dbname = 'postgres', 
+#conn = psycopg.connect(dbname = 'postgres', 
+#                       user = 'postgres', 
+#                       host= 'localhost',
+#                       password = "postgres",
+#                       port = 5432)
+conn = psycopg.connect(dbname = 'wikidb', 
                        user = 'postgres', 
                        host= 'localhost',
                        password = "postgres",
-                       port = 5432)
+                       port = 15432)
 
 
 def get_totaledit_count(wiki = 'enwiki'):
@@ -114,9 +119,10 @@ dataspec = [
     {'wiki':'enwiki', 'title':'UPS Airlines Flight 2976'},
     {'wiki':'enwiki', 'title':'Zohran Mamdani'},
     {'wiki':'dewiki', 'title':'Zohran Mamdani'},
+    {'wiki':'enwiki', 'title':'2025 New York City mayoral election'},
+    {'wiki':'dewiki', 'title':'Wolfgang Amadeus Mozart'},
     # last edit of en. Mozart article was on Nov 1, 2025 (i.e. outside of our data range)
     {'wiki':'enwiki', 'title':'Wolfgang Amadeus Mozart'},
-    {'wiki':'dewiki', 'title':'Wolfgang Amadeus Mozart'},
 ]
 
 plotdata = []
@@ -156,8 +162,8 @@ import numpy as np
 def plot_worker(plotdata, do_ylog=False):
     fig,hax = plt.subplots(1)
 
-    # latest time in database (FIXME: find from data)
-    dt_max = datetime.datetime(2025, 11, 6, 9, 0)
+    # latest time in database (FIXME: find from data), think about timezone
+    dt_max = datetime.datetime(2025, 11, 6, 16, 0)
     for curr_q in plotdata:
         curr_d = curr_q['data']
         # datatype: datetime.timedelta
