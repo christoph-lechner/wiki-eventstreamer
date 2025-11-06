@@ -10,6 +10,7 @@ CREATE TABLE wtbl(
 	event_meta_domain TEXT,
     event_id BIGINT,
 	event_wiki TEXT,
+    event_title TEXT,
 	event_user TEXT,
 	event_type TEXT
 );
@@ -31,8 +32,13 @@ conn = psycopg.connect(dbname = 'postgres',
 # obtain cursor to perform database operations
 cur = conn.cursor()
 
+linecntr=0
 with open('events_in.json','r') as fin:
     for l_ in fin:
+        linecntr+=1
+        if (linecntr%100000)==0:
+            print('.')
+        #
         try:
             event = json.loads(l_)
         except ValueError:
@@ -55,12 +61,13 @@ with open('events_in.json','r') as fin:
         event_meta_domain = my_helper(event['meta'],'domain')
         event_id = my_helper(event,'id')
         event_wiki = my_helper(event,'wiki')
+        event_title = my_helper(event,'title')
         event_user = my_helper(event,'user')
         event_type = my_helper(event,'type')
 
         # todo: check format string for int value (8-byte int in DB)
-        cur.execute('INSERT INTO wtbl (event_meta_dt,event_meta_id,event_meta_domain,event_id,event_wiki,event_user,event_type) VALUES (%s,%s,%s,%s,%s,%s,%s)',
-            (event_meta_dt, event_meta_id, event_meta_domain, event_id, event_wiki, event_user, event_type))
+        cur.execute('INSERT INTO wtbl (event_meta_dt,event_meta_id,event_meta_domain,event_id,event_wiki,event_title,event_user,event_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)',
+            (event_meta_dt, event_meta_id, event_meta_domain, event_id, event_wiki, event_title, event_user, event_type))
         # break
 
 conn.commit()
