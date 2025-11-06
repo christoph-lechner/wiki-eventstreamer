@@ -17,6 +17,34 @@ import datetime
 
 dir_checkpoints = 'streamdata/'
 
+def load_checkpoint():
+    # list all files in provided data directory
+    checkpoint_candidates=[]
+    for fn_ in os.listdir(dir_checkpoints):
+        # print(fn_)
+        if fn_.startswith('checkpoint_'):
+            tmp_path=dir_checkpoints+'/'+fn_
+            if os.path.isfile(tmp_path):
+                # print(tmp_path)
+                checkpoint_candidates.append(tmp_path)
+
+    fn_checkpoint=None
+    if len(checkpoint_candidates)==0:
+        print('No checkpoint was found!')
+        return None
+
+    checkpoint_candidates.sort(reverse=True)
+    # print(checkpoint_candidates)
+    fn_checkpoint=checkpoint_candidates[0]
+
+    print(f'going to use checkpoint: {fn_checkpoint}')
+
+    with open(fn_checkpoint,'r') as fin:
+        cp_status = fin.readline()
+
+    # remark: Not deleting the checkpoint file! Once the first new file is written, the file from which we resumed becomes meaningless anyhow because the youngest checkpoint file is used for any future resume
+
+    return(cp_status)
 
 def store_checkpoint(*, status=None, data):
     """
@@ -53,12 +81,17 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
     kwargs['headers']['User-Agent']='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
     #
     # FIXME: add code to obtain event id info from checkpoint file
+    # Note 2025-11-06: trying to resume by providing latest_event_id argument to EventSource gives HTTP 400...
     checkpoint_throttle_cntr=0
     last_checkpoint=None
-    last_id = None
+    # Example for an eventid that worked in tests (note that it is only valid for a few minutes):
+    # last_id='[{"topic":"eqiad.mediawiki.recentchange","partition":0,"offset":-1},{"topic":"codfw.mediawiki.recentchange","partition":0,"timestamp":1762467620155}]'
+
+    # If no checkpoint was found, this returns None (default value of latest_event_id argument to EventSource)
+    last_id = load_checkpoint()
     while True:
         try:
-            with EventSource(url,**kwargs) as stream:
+            with EventSource(url, latest_event_id=last_id, **kwargs) as stream:
                 for event in stream:
                     if event.type == 'message':
                         try:
@@ -69,13 +102,9 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
                         # write checkpoints
                         checkpoint_throttle_cntr+=1
                         if (checkpoint_throttle_cntr>100):
+                            checkpoint_data=event.last_event_id
+                            last_checkpoint = store_checkpoint(status=last_checkpoint, data=checkpoint_data)
                             checkpoint_throttle_cntr=0
-                            # FIXME: is 'id' the correct element in the decoded JSON?
-                            if 'id' in change:
-                                checkpoint_data=str(change['id'])
-                                last_checkpoint = store_checkpoint(status=last_checkpoint, data=checkpoint_data)
-                            else:
-                                print('warning: not storing checkpoint because field id is missing')
 
                         # this prints the *raw* data
                         if cb_raw is not None:
