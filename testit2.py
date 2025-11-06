@@ -31,7 +31,7 @@ def open_outfile(fn):
 def cb_process_raw(event, status):
     if status['fng'].qq():
         fnold = status['fn']
-        fnnew = fnold+'.complete'
+        fnnew = fnold+'.ready'
         print('Closing file '+fnold)
         status['fout'].close()
         os.rename(fnold, fnnew)
@@ -43,7 +43,7 @@ def cb_process_raw(event, status):
     status['fout'].write(event.data)
     status['fout'].write('\n')
 
-def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/xrecentchange', cb=None, cb_raw=None):
+def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange', cb=None, cb_raw=None):
     # Info: Wikipedia blocks Python scripts -> gives 403
     # Fake Firefox -> gives 200
     kwargs = dict()

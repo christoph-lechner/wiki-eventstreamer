@@ -8,7 +8,7 @@ class FilenameGen:
         self.tnow = datetime.datetime.now()
         self.tprev = self.tnow
 
-        self.min_switch = 35 # minute of the hour when to switch to next file
+        self.min_switch = 5 # minute of the hour when to switch to next file
         self.datadir = 'streamdata' # data dir without trailing slash
         self.seq = 1
 
