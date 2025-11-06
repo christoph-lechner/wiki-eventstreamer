@@ -79,12 +79,11 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
     kwargs = dict()
     kwargs['headers'] = dict()
     kwargs['headers']['User-Agent']='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
-    #
-    # FIXME: add code to obtain event id info from checkpoint file
-    # Note 2025-11-06: trying to resume by providing latest_event_id argument to EventSource gives HTTP 400...
+
+
     checkpoint_throttle_cntr=0
     last_checkpoint=None
-    # Example for an eventid that worked in tests (note that it is only valid for a few minutes):
+    # Example for an eventid that worked in 2025-Nov tests (note that it is only valid for a few minutes):
     # last_id='[{"topic":"eqiad.mediawiki.recentchange","partition":0,"offset":-1},{"topic":"codfw.mediawiki.recentchange","partition":0,"timestamp":1762467620155}]'
 
     # If no checkpoint was found, this returns None (default value of latest_event_id argument to EventSource)
