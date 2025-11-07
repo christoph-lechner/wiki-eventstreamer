@@ -149,20 +149,23 @@ def cb_demo_user(change):
 
 def outfile_open(fn):
     # Future improvement: use gzip.open to write data gzip-compressed (JSON can be compressed by factor of about 5)
-    fout = open(fn,'w')
+    import gzip
+    fout = gzip.open(fn+'.gz','w')
+    fout_x = open(fn,'w')
     print(f'Opened output file {fn}')
-    return(fout)
+    return(fout,fout_x)
 
 def outfile_rotate(status):
     fnold = status['fn']
     fnnew = fnold+'.ready'
     print('Closing file '+fnold)
     status['fout'].close()
+    status['fout_x'].close()
     os.rename(fnold, fnnew)
     print('Renamed file (to mark as ready for further processing) -> '+fnnew)
     #
     status['fn'] = status['fng'].getfn()
-    status['fout'] = outfile_open(status['fn'])
+    status['fout'],status['fout_x'] = outfile_open(status['fn'])
     status['events_in_file']=0
 
 def cb_process_raw(event, status):
@@ -174,8 +177,10 @@ def cb_process_raw(event, status):
         print('Rotating output file (max events reached)')
         outfile_rotate(status)
 
-    status['fout'].write(event.data)
-    status['fout'].write('\n')
+    status['fout'].write(event.data.encode())
+    status['fout'].write(b'\n')
+    status['fout_x'].write(event.data)
+    status['fout_x'].write('\n')
     status['events_in_file']+=1
 
 
@@ -184,7 +189,7 @@ if __name__=="__main__":
     status['events_in_file']=0
     status['fng'] = FilenameGen()
     status['fn'] = status['fng'].getfn()
-    status['fout'] = outfile_open(status['fn'])
+    status['fout'],status['fout_x'] = outfile_open(status['fn'])
 
     # lambda captures local dict for status management
     cb_raw = lambda event_: cb_process_raw(event_, status)
