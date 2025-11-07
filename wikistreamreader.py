@@ -9,10 +9,13 @@ from my_util import FilenameGen
 import os
 import time
 import datetime
+import gzip
 
 # Force rotation after this number of events in file
 # As of 2025-Nov, the i"recentchange" gives less than 200000 events per hour (on avg, every event corresponds to about 150 bytes in the file)
 max_events_per_file=500000
+
+do_gzip=True
 
 # directory holding checkpoints
 dir_checkpoints = 'streamdata/'
@@ -149,26 +152,25 @@ def cb_demo_user(change):
 
 def outfile_open(fn):
     # improvement: use gzip.open to write data gzip-compressed (JSON can be compressed by factor of about 5)
-    # import gzip
-    # fout = gzip.open(fn+'.gz','w')
-    
-    # to check that encode() does not screw up the data when used on 'wb'-opened files
-    fout = open(fn+'.test','wb')
-    fout_x = open(fn,'w')
+    if do_gzip:
+        fout = gzip.open(fn,'w') # if gzip is used, caller provides filename with .gz extension
+    else:
+        fout = open(fn,'wb')
     print(f'Opened output file {fn}')
-    return(fout,fout_x)
+    return fout
 
 def outfile_rotate(status):
     fnold = status['fn']
     fnnew = fnold+'.ready'
     print('Closing file '+fnold)
     status['fout'].close()
-    status['fout_x'].close()
     os.rename(fnold, fnnew)
     print('Renamed file (to mark as ready for further processing) -> '+fnnew)
     #
     status['fn'] = status['fng'].getfn()
-    status['fout'],status['fout_x'] = outfile_open(status['fn'])
+    if do_gzip:
+        status['fn'] = status['fn']+'.gz'
+    status['fout'] = outfile_open(status['fn'])
     status['events_in_file']=0
 
 def cb_process_raw(event, status):
@@ -182,8 +184,6 @@ def cb_process_raw(event, status):
 
     status['fout'].write(event.data.encode())
     status['fout'].write(b'\n')
-    status['fout_x'].write(event.data)
-    status['fout_x'].write('\n')
     status['events_in_file']+=1
 
 
@@ -192,7 +192,9 @@ if __name__=="__main__":
     status['events_in_file']=0
     status['fng'] = FilenameGen()
     status['fn'] = status['fng'].getfn()
-    status['fout'],status['fout_x'] = outfile_open(status['fn'])
+    if do_gzip:
+        status['fn'] = status['fn']+'.gz'
+    status['fout'] = outfile_open(status['fn'])
 
     # lambda captures local dict for status management
     cb_raw = lambda event_: cb_process_raw(event_, status)
