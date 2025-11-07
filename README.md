@@ -1,6 +1,10 @@
 # README
 Christoph Lechner, Nov 2025
 
+According to the [description](https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service) the HTTPS connection is reset after about 15 minutes. Therefore a special client is required.
+
+See the [description of the EventStreams HTTP Service at wikimedia.org](https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service) for more (technical) details.
+
 ## Setup/Preparation
 Clone the git repository.
 
@@ -37,6 +41,7 @@ total 1698868
 -rw-rw-r-- 1 cl cl 150410965 Nov  7 10:52 stream_20251107T100500_000000012
 cl@ubuntu:~/wikireader/wiki-eventstreamer/streamdata$
 ```
-The files with extension `.ready` will not be touched by the reader anymore, so they are ready for pickup for further processing.
+At minute 5 of every hour, the files are rotated. The following events are written in a new file and the previous file gets the additional extension `.ready`.
+These files with extension `.ready` will not be touched by the reader anymore, so they are ready to be collected for further processing.
 
 In case the program is restarted, the `checkpoint_*` file contains information to resume the streaming. Note that this is only possible if the interruption was not longer than a few minutes. These checkpoint files are replaced every few seconds and only the newest one (using timestamp in filename) will be used.
