@@ -148,9 +148,12 @@ def cb_demo_user(change):
             print(last_id)
 
 def outfile_open(fn):
-    # Future improvement: use gzip.open to write data gzip-compressed (JSON can be compressed by factor of about 5)
-    import gzip
-    fout = gzip.open(fn+'.gz','w')
+    # improvement: use gzip.open to write data gzip-compressed (JSON can be compressed by factor of about 5)
+    # import gzip
+    # fout = gzip.open(fn+'.gz','w')
+    
+    # to check that encode() does not screw up the data when used on 'wb'-opened files
+    fout = open(fn+'.test','wb')
     fout_x = open(fn,'w')
     print(f'Opened output file {fn}')
     return(fout,fout_x)
