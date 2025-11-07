@@ -188,4 +188,6 @@ if __name__=="__main__":
     # lambda captures local dict for status management
     cb_raw = lambda event_: cb_process_raw(event_, status)
 
-    get_stream_data(cb=cb_demo_user, cb_raw=cb_raw)
+    # see section "Historical Consumption" in https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service (accessed 2025-Nov-07)
+    url_hist = 'https://stream.wikimedia.org/v2/stream/recentchange?since=2025-11-07T00:00:00Z'
+    get_stream_data(url=url_hist, cb=cb_demo_user, cb_raw=cb_raw)
