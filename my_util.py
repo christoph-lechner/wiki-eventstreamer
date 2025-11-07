@@ -12,7 +12,7 @@ class FilenameGen:
         self.datadir = 'streamdata' # data dir without trailing slash
         self.seq = 1
 
-    def qq(self):
+    def rot_timecrit(self):
         self.tprev = self.tnow
         self.tnow = datetime.datetime.now()
         do_switch = self.tprev.minute<self.min_switch and self.tnow.minute>=self.min_switch

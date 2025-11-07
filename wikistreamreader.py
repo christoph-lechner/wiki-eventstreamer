@@ -10,7 +10,14 @@ import os
 import time
 import datetime
 
+# Force rotation after this number of events in file
+# As of 2025-Nov, the i"recentchange" gives less than 200000 events per hour (on avg, every event corresponds to about 150 bytes in the file)
+max_events_per_file=500000
+
+# directory holding checkpoints
 dir_checkpoints = 'streamdata/'
+
+#####
 
 def load_checkpoint():
     # list all files in provided data directory
@@ -140,33 +147,43 @@ def cb_demo_user(change):
             last_id = event.last_event_id
             print(last_id)
 
-def open_outfile(fn):
+def outfile_open(fn):
     fout = open(fn,'w')
     print(f'Opened output file {fn}')
     return(fout)
 
+def outfile_rotate(status):
+    fnold = status['fn']
+    fnnew = fnold+'.ready'
+    print('Closing file '+fnold)
+    status['fout'].close()
+    os.rename(fnold, fnnew)
+    print('Renamed file (to mark as ready for further processing) -> '+fnnew)
+    #
+    status['fn'] = status['fng'].getfn()
+    status['fout'] = outfile_open(status['fn'])
+    status['events_in_file']=0
+
 def cb_process_raw(event, status):
     # If needed: file rotation
-    if status['fng'].qq():
-        fnold = status['fn']
-        fnnew = fnold+'.ready'
-        print('Closing file '+fnold)
-        status['fout'].close()
-        os.rename(fnold, fnnew)
-        print('Renamed file (to mark as ready for further processing) -> '+fnnew)
-        #
-        status['fn'] = status['fng'].getfn()
-        status['fout'] = open_outfile(status['fn'])
+    if status['fng'].rot_timecrit():
+        print('Rotating output file (time crit.)')
+        outfile_rotate(status)
+    elif status['events_in_file']>=max_events_per_file:
+        print('Rotating output file (max events reached)')
+        outfile_rotate(status)
 
     status['fout'].write(event.data)
     status['fout'].write('\n')
+    status['events_in_file']+=1
 
 
 if __name__=="__main__":
     status={}
+    status['events_in_file']=0
     status['fng'] = FilenameGen()
     status['fn'] = status['fng'].getfn()
-    status['fout'] = open_outfile(status['fn'])
+    status['fout'] = outfile_open(status['fn'])
 
     # lambda captures local dict for status management
     cb_raw = lambda event_: cb_process_raw(event_, status)
