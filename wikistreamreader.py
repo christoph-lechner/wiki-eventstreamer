@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 
-# CL, 2025-11-05:
-# installed packages
-# Successfully installed certifi-2025.10.5 charset_normalizer-3.4.4 idna-3.11 requests-2.32.5 requests_sse-0.5.2 urllib3-2.5.0
-
-
-# from https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service
+# Christoph Lechner, Nov 2025
 
 import json
 from requests_sse import EventSource
@@ -99,6 +94,9 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
                         except ValueError:
                             continue # next event
 
+                        # Store id of the event just received, allows to resume in case the connection breaks and cannot be restarted immediately by EventSource. This would be the case if the server returns a HTTP 503 status (or any other error code).
+                        last_id = event.last_event_id
+
                         # write checkpoints
                         checkpoint_throttle_cntr+=1
                         if (checkpoint_throttle_cntr>100):
@@ -106,7 +104,7 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
                             last_checkpoint = store_checkpoint(status=last_checkpoint, data=checkpoint_data)
                             checkpoint_throttle_cntr=0
 
-                        # this prints the *raw* data
+                        # process the *raw* event
                         if cb_raw is not None:
                             cb_raw(event)
                         """
@@ -122,7 +120,7 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
                                 if change['meta']['domain'] == 'canary':
                                     continue
 
-                        # further processing in user-provided callback function
+                        # further processing in user-provided callback function (parsed JSON)
                         if cb is not None:
                             cb(change)
         except InvalidStatusCodeError as e:
@@ -148,6 +146,7 @@ def open_outfile(fn):
     return(fout)
 
 def cb_process_raw(event, status):
+    # If needed: file rotation
     if status['fng'].qq():
         fnold = status['fn']
         fnnew = fnold+'.ready'
@@ -173,11 +172,3 @@ if __name__=="__main__":
     cb_raw = lambda event_: cb_process_raw(event_, status)
 
     get_stream_data(cb=cb_demo_user, cb_raw=cb_raw)
-
-# - Run this Python script.
-# - Publish an edit to [[Sandbox]] on test.wikipedia.org, and observe it getting printed.
-# - Quit the Python process.
-# - Pass last_id to last_event_id parameter when creating the stream like
-#   with EventSource(url,  latest_event_id=last_id) as stream: ...
-# - Publish another edit, while the Python process remains off.
-# - Run this Python script again, and notice it finding and printing the missed edit.
