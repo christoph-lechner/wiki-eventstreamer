@@ -148,6 +148,7 @@ def cb_demo_user(change):
             print(last_id)
 
 def outfile_open(fn):
+    # Future improvement: use gzip.open to write data gzip-compressed (JSON can be compressed by factor of about 5)
     fout = open(fn,'w')
     print(f'Opened output file {fn}')
     return(fout)
@@ -188,6 +189,7 @@ if __name__=="__main__":
     # lambda captures local dict for status management
     cb_raw = lambda event_: cb_process_raw(event_, status)
 
-    # see section "Historical Consumption" in https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service (accessed 2025-Nov-07)
+    # Download of historical data (WARNING: can generate lots of data).
+    # See section "Historical Consumption" in https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service (accessed 2025-Nov-07)
     url_hist = 'https://stream.wikimedia.org/v2/stream/recentchange?since=2025-11-07T00:00:00Z'
     get_stream_data(url=url_hist, cb=cb_demo_user, cb_raw=cb_raw)
