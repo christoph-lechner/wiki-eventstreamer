@@ -2,6 +2,8 @@
 
 import psycopg
 import json
+import argparse
+import gzip
 
 """
 CREATE TABLE wtbl(
@@ -17,8 +19,23 @@ CREATE TABLE wtbl(
 );
 """
 
-# zcat changes__starting20251105T1630_finaltest.txt.gz | head -n 1000000 > events_in.json
-# ./simple_import.py
+### parse user-provided settings ###
+parser = argparse.ArgumentParser(
+                    prog='simple_import',
+                    description='Simple wiki event importer')
+
+parser.add_argument('filename') # positional argument
+parser.add_argument('-z', '--gzip', action='store_true')
+
+args = parser.parse_args()
+# print(args)
+
+# helper function so we can use "with ... as fin" for both modes
+def open_infile():
+    if args.gzip:
+        return gzip.open(args.filename,'r')
+    else:
+        return open(args.filename,'rb')
 
 #conn = psycopg.connect(dbname = 'postgres', 
 #                       user = 'postgres', 
@@ -35,9 +52,10 @@ conn = psycopg.connect(dbname = 'wikidb',
 cur = conn.cursor()
 
 linecntr=0
-with open('events_in.json','r') as fin:
+with open_infile() as fin:
     for l_ in fin:
-        linecntr+=1
+        l_ = l_.decode() # we use file in 'rb' mode now so we can switch transparently between gzip'd and standard files
+        linecntr += 1
         if (linecntr%100000)==0:
             print('.', end='', flush=True)
         #
@@ -76,7 +94,9 @@ with open('events_in.json','r') as fin:
             (event_meta_dt, event_meta_id, event_meta_domain, event_id, event_type, event_wiki, event_user, event_bot, event_title))
         # break
 
+print('') # newline
 conn.commit()
-
 cur.close()
 conn.close()
+
+print(f'Loaded {linecntr} events')
