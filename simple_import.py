@@ -32,6 +32,7 @@ args = parser.parse_args()
 
 # helper function so we can use "with ... as fin" for both modes
 def open_infile():
+    print(f'Input file: {args.filename}')
     if args.gzip:
         return gzip.open(args.filename,'r')
     else:
