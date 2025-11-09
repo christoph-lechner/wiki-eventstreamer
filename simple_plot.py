@@ -28,7 +28,7 @@ CREATE TABLE wtbl(
 #                       port = 5432)
 conn = psycopg.connect(dbname = 'wikidb', 
                        user = 'postgres', 
-                       host= 'localhost',
+                       host= '192.168.2.253',
                        password = "postgres",
                        port = 15432)
 
@@ -44,7 +44,7 @@ def get_totaledit_count(wiki = 'enwiki'):
            SELECT
               TO_TIMESTAMP(event_meta_dt, 'YYYY-MM-DD T HH24:MI:SS') AS ts_event_meta_dt,
               event_meta_id,event_meta_domain,event_id,event_wiki,event_user,event_bot,event_type,event_title
-           FROM wtbl
+           FROM wiki_change_events
            WHERE
               event_type='edit' AND event_wiki=%s)
         SELECT
@@ -82,7 +82,7 @@ def get_edit_count(wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
            SELECT
               TO_TIMESTAMP(event_meta_dt, 'YYYY-MM-DD T HH24:MI:SS') AS ts_event_meta_dt,
               event_meta_id,event_meta_domain,event_id,event_wiki,event_user,event_type,event_title
-           FROM wtbl
+           FROM wiki_change_events
            WHERE
               event_type='edit' AND event_wiki=%s AND event_title=%s)
         SELECT
@@ -123,6 +123,8 @@ dataspec = [
     {'wiki':'dewiki', 'title':'Wolfgang Amadeus Mozart'},
     # last edit of en. Mozart article was on Nov 1, 2025 (i.e. outside of our data range)
     {'wiki':'enwiki', 'title':'Wolfgang Amadeus Mozart'},
+    {'wiki':'enwiki', 'title':'Pauline Collins'},
+    {'wiki':'enwiki', 'title':'Timeline of file sharing'},
 ]
 
 plotdata = []
