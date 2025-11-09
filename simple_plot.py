@@ -3,6 +3,7 @@
 import psycopg
 import json
 import datetime
+import time
 
 """
 CREATE TABLE wtbl(
@@ -127,12 +128,16 @@ dataspec = [
     {'wiki':'enwiki', 'title':'Timeline of file sharing'},
 ]
 
+
+t_datacollection0 = time.time()
 plotdata = []
 for kwargs in dataspec:
     my_data = {}
     my_data['data'] = get_edit_count(**kwargs)
     my_data['infotxt'] = kwargs['wiki']+'/'+kwargs['title']
     plotdata.append(my_data)
+t_datacollection1 = time.time()
+print(f'time for data collection: {t_datacollection1 - t_datacollection0}')
 
 
 #####
@@ -147,12 +152,15 @@ dataspec_wiki = [
     {'wiki':'fiwiki'},
 ]
 
+t_datacollection0 = time.time()
 plotdata_wiki = []
 for kwargs in dataspec_wiki:
     my_data = {}
     my_data['data'] = get_totaledit_count(**kwargs)
     my_data['infotxt'] = kwargs['wiki']
     plotdata_wiki.append(my_data)
+t_datacollection1 = time.time()
+print(f'time for data collection: {t_datacollection1 - t_datacollection0}')
 
 #############
 ### Plots ###
