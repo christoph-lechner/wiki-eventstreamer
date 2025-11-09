@@ -3,23 +3,7 @@
 import psycopg
 import json
 import datetime
-
-"""
-CREATE TABLE wtbl(
-	event_meta_dt TEXT,
-	event_meta_id TEXT,
-	event_meta_domain TEXT,
-    event_id BIGINT,
-	event_type TEXT,
-	event_wiki TEXT,
-	event_user TEXT,
-    event_bot BOOLEAN,
-    event_title TEXT
-);
-"""
-
-# zcat changes__starting20251105T1630_finaltest.txt.gz | head -n 1000000 > events_in.json
-# ./simple_import.py
+import time
 
 #conn = psycopg.connect(dbname = 'postgres', 
 #                       user = 'postgres', 
@@ -40,17 +24,12 @@ def get_totaledit_count(wiki = 'enwiki'):
 
     cur.execute(
         """
-        WITH q AS (
-           SELECT
-              TO_TIMESTAMP(event_meta_dt, 'YYYY-MM-DD T HH24:MI:SS') AS ts_event_meta_dt,
-              event_meta_id,event_meta_domain,event_id,event_wiki,event_user,event_bot,event_type,event_title
-           FROM wiki_change_events
-           WHERE
-              event_type='edit' AND event_wiki=%s)
         SELECT
            DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
            COUNT(*)
-        FROM q
+        FROM wiki_change_events_test
+        WHERE
+           event_type='edit' AND event_wiki=%s
         GROUP BY DATE(ts_event_meta_dt), EXTRACT(HOUR FROM ts_event_meta_dt)
         ORDER BY DATE(ts_event_meta_dt), EXTRACT(HOUR FROM ts_event_meta_dt)
         """,
@@ -78,17 +57,12 @@ def get_edit_count(wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
 
     cur.execute(
         """
-        WITH q AS (
-           SELECT
-              TO_TIMESTAMP(event_meta_dt, 'YYYY-MM-DD T HH24:MI:SS') AS ts_event_meta_dt,
-              event_meta_id,event_meta_domain,event_id,event_wiki,event_user,event_type,event_title
-           FROM wiki_change_events
-           WHERE
-              event_type='edit' AND event_wiki=%s AND event_title=%s)
         SELECT
            DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
            COUNT(*)
-        FROM q
+        FROM wiki_change_events_test
+        WHERE
+           event_type='edit' AND event_wiki=%s AND event_title=%s
         GROUP BY
            DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
         ORDER BY
@@ -127,12 +101,16 @@ dataspec = [
     {'wiki':'enwiki', 'title':'Timeline of file sharing'},
 ]
 
+
+t_datacollection0 = time.time()
 plotdata = []
 for kwargs in dataspec:
     my_data = {}
     my_data['data'] = get_edit_count(**kwargs)
     my_data['infotxt'] = kwargs['wiki']+'/'+kwargs['title']
     plotdata.append(my_data)
+t_datacollection1 = time.time()
+print(f'time for data collection: {t_datacollection1 - t_datacollection0}')
 
 
 #####
@@ -147,12 +125,15 @@ dataspec_wiki = [
     {'wiki':'fiwiki'},
 ]
 
+t_datacollection0 = time.time()
 plotdata_wiki = []
 for kwargs in dataspec_wiki:
     my_data = {}
     my_data['data'] = get_totaledit_count(**kwargs)
     my_data['infotxt'] = kwargs['wiki']
     plotdata_wiki.append(my_data)
+t_datacollection1 = time.time()
+print(f'time for data collection: {t_datacollection1 - t_datacollection0}')
 
 #############
 ### Plots ###
