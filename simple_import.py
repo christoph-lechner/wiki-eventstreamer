@@ -4,9 +4,14 @@ import psycopg
 import json
 import argparse
 import gzip
+import datetime
 
 """
-CREATE TABLE wtbl(
+Schema of table holding all data (after merging all loads):
+CREATE TABLE wiki_change_events(
+    -- MD5 hash over a few fields, ensures deduplication (data is loaded into this table using MERGE command)
+    _h TEXT UNIQUE,
+    ts_event_meta_dt TIMESTAMP WITH TIME ZONE,
 	event_meta_dt TEXT,
 	event_meta_id TEXT,
 	event_meta_domain TEXT,
@@ -18,6 +23,10 @@ CREATE TABLE wtbl(
     event_title TEXT
 );
 """
+
+data_table = 'wiki_change_events';
+stg_table_prefix = 'stg_tmp';
+do_debug = False
 
 ### parse user-provided settings ###
 parser = argparse.ArgumentParser(
@@ -51,6 +60,36 @@ conn = psycopg.connect(dbname = 'wikidb',
 
 # obtain cursor to perform database operations
 cur = conn.cursor()
+
+# make sure that names of temporary tables are pretty unique
+tnow = datetime.datetime.now()
+stg_table_prefix = stg_table_prefix+'_'+tnow.strftime('%Y%m%dT%H%M%S_%f')
+stg_table_load   = stg_table_prefix+'_1';
+stg_table_step2  = stg_table_prefix+'_2';
+stg_table_step3  = stg_table_prefix+'_3';
+
+# CREATE TEMPORARY TABLE -> table is automatically dropped at end of transaction
+# For debugging we don't want that...
+if do_debug:
+    flag_temp = ''
+else:
+    flag_temp = 'TEMPORARY'
+
+cur.execute(
+f"""
+CREATE {flag_temp} TABLE {stg_table_load}(
+	event_meta_dt TEXT,
+	event_meta_id TEXT,
+	event_meta_domain TEXT,
+    event_id BIGINT,
+	event_type TEXT,
+	event_wiki TEXT,
+	event_user TEXT,
+    event_bot BOOLEAN,
+    event_title TEXT
+);
+"""
+)
 
 linecntr=0
 with open_infile() as fin:
@@ -91,13 +130,65 @@ with open_infile() as fin:
         event_type = my_helper(event,'type')
 
         # todo: check format string for int value (8-byte int in DB)
-        cur.execute('INSERT INTO wtbl (event_meta_dt,event_meta_id,event_meta_domain,event_id,event_type,event_wiki,event_user,event_bot,event_title) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+        cur.execute('INSERT INTO '+stg_table_load+' (event_meta_dt,event_meta_id,event_meta_domain,event_id,event_type,event_wiki,event_user,event_bot,event_title) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)',
             (event_meta_dt, event_meta_id, event_meta_domain, event_id, event_type, event_wiki, event_user, event_bot, event_title))
         # break
 
 print('') # newline
+print(f'Loaded {linecntr} events')
+rowcount_file = linecntr
+
+#####
+
+print('adding hashes to rows ...')
+cur.execute(
+f"""
+CREATE {flag_temp} TABLE {stg_table_step2} AS
+SELECT
+	MD5(CONCAT(CONCAT(event_meta_id,'_'),'-',CONCAT(event_meta_dt,'_'),'-',CONCAT(CAST(event_id AS TEXT),'_'),'-',CONCAT(event_user,'_'))) AS _h,
+	TO_TIMESTAMP(event_meta_dt, 'YYYY-MM-DD T HH24:MI:SS.FF3 TZ') AS ts_event_meta_dt,
+	event_meta_dt,event_meta_id,event_meta_domain,event_id,event_type,event_wiki,event_user,event_bot,event_title
+FROM {stg_table_load};
+"""
+)
+rowcount_initial = cur.rowcount # no deduplication here, so it should correspond to number of loaded rows
+
+print('deduplicate staged rows bashed on hashes (sometimes the same event is sent multiple times) ...')
+cur.execute(
+f"""
+-- de-duplicate based on MD5 hash
+CREATE {flag_temp} TABLE {stg_table_step3} AS
+WITH q AS (
+	SELECT *, ROW_NUMBER() OVER(PARTITION BY _h) AS _rn FROM {stg_table_step2}
+)
+SELECT
+    _h,ts_event_meta_dt,event_meta_dt,event_meta_id,event_meta_domain,event_id,event_type,event_wiki,event_user,event_bot,event_title
+FROM q WHERE _rn=1;
+"""
+)
+rowcount_hash_dedupl = cur.rowcount
+
+# finally MERGE only rows with unseen hash values
+# -> loading the same data twice does not harm as nothing gets inserted
+print('execute MERGE command (only events with new MD5 hash get stored)')
+cur.execute(
+f"""
+MERGE
+INTO
+    {data_table} AS dst
+USING
+    {stg_table_step3} AS src
+ON
+	dst._h=src._h
+WHEN MATCHED THEN DO NOTHING
+WHEN NOT MATCHED THEN INSERT VALUES (_h,ts_event_meta_dt,event_meta_dt,event_meta_id,event_meta_domain,event_id,event_type,event_wiki,event_user,event_bot,event_title);
+"""
+)
+rowcount_final_merge = cur.rowcount
+
 conn.commit()
 cur.close()
 conn.close()
 
-print(f'Loaded {linecntr} events')
+print(f'DONE: {rowcount_final_merge}/{rowcount_file} rows from file got merged into data table')
+print(f'   breakdown: from file: {rowcount_file}; after dedupl. {rowcount_hash_dedupl}; rows merged {rowcount_final_merge}')
