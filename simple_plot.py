@@ -27,7 +27,7 @@ def get_totaledit_count(wiki = 'enwiki'):
         SELECT
            DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
            COUNT(*)
-        FROM wiki_change_events
+        FROM wiki_change_events_test
         WHERE
            event_type='edit' AND event_wiki=%s
         GROUP BY DATE(ts_event_meta_dt), EXTRACT(HOUR FROM ts_event_meta_dt)
@@ -60,7 +60,7 @@ def get_edit_count(wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
         SELECT
            DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
            COUNT(*)
-        FROM wiki_change_events
+        FROM wiki_change_events_test
         WHERE
            event_type='edit' AND event_wiki=%s AND event_title=%s
         GROUP BY
