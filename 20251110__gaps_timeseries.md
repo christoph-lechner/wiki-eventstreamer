@@ -10,9 +10,9 @@ WITH q AS (
 	WHERE
 	   event_type='edit' AND event_wiki='dewiki' AND event_title='Wolfgang Amadeus Mozart'
 	GROUP BY
-	   ts_event_meta_dt,DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
+	   DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
 	ORDER BY
-	   ts_event_meta_dt,DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
+	   DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
 )
 SELECT DATE(gs) AS gs_date, EXTRACT(HOUR FROM gs) AS gs_hour FROM generate_series((SELECT MIN(date) FROM q), (SELECT MAX(date) FROM q), interval '1 hour') AS gs
 ```
@@ -28,9 +28,9 @@ WITH q AS (
 	WHERE
 	   event_type='edit' AND event_wiki='dewiki' AND event_title='Wolfgang Amadeus Mozart'
 	GROUP BY
-	   ts_event_meta_dt,DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
+	   DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
 	ORDER BY
-	   ts_event_meta_dt,DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
+	   DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
 ),
 times_without_gap AS(
 SELECT
@@ -52,9 +52,9 @@ WITH q AS (
 	WHERE
 	   event_type='edit' AND event_wiki='dewiki' AND event_title='Wolfgang Amadeus Mozart'
 	GROUP BY
-	   ts_event_meta_dt,DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
+	   DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
 	ORDER BY
-	   ts_event_meta_dt,DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
+	   DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
 ),
 times_without_gap AS(
 SELECT
