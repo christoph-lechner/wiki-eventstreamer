@@ -1,0 +1,27 @@
+# Christoph Lechner, 2025-Nov
+#
+# Our own services go into /etc/systemd/system/
+[Unit]
+Description=CL's wiki stream reader
+
+# delay service start-up until the network is up
+Wants=network-online.target
+After=network-online.target
+
+StartLimitIntervalSec=0
+
+
+[Service]
+# Type=exec may be better according to https://man.archlinux.org/man/systemd.service.5.en
+# Type=simple
+Type=exec
+Restart=always
+RestartSec=1
+Environment="PYTHONUNBUFFERED=1"
+User=dataacq
+WorkingDirectory=/home/dataacq/wiki/wiki-eventstreamer/streamreader
+ExecStart=/home/dataacq/wiki/wiki-eventstreamer/streamreader/run_wikistreamreader.sh
+# default signal sent to stop is SIGTERM, can use KillSignal to adjust
+
+[Install]
+WantedBy=multi-user.target
