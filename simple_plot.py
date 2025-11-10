@@ -5,18 +5,6 @@ import json
 import datetime
 import time
 
-#conn = psycopg.connect(dbname = 'postgres', 
-#                       user = 'postgres', 
-#                       host= 'localhost',
-#                       password = "postgres",
-#                       port = 5432)
-conn = psycopg.connect(dbname = 'wikidb', 
-                       user = 'postgres', 
-                       host= '192.168.2.253',
-                       password = "postgres",
-                       port = 15432)
-
-
 def get_totaledit_count(wiki = 'enwiki'):
     q_wiki = wiki
 
@@ -73,7 +61,14 @@ def get_edit_count(wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
         SELECT
                 DATE(gs) AS gs_date, EXTRACT(HOUR FROM gs) AS gs_hour
         FROM
-                generate_series((SELECT MIN(date) FROM q), (SELECT MAX(date) FROM q), interval '1 hour') AS gs
+                generate_series(
+                    (SELECT MIN(date) FROM q),
+
+                    -- "1+": also generate rows for the final day having data (would be truncated otherwise)
+                    1+(SELECT MAX(date) FROM q),
+                    interval '1 hour'
+                ) AS gs
+                -- TODO/FIXME: truncate this series at the last event in DB (otherwise there will be zero-padding at times later than latest value in DB)
         )
         SELECT
             -- column for development purposes in pgadmin
@@ -101,6 +96,20 @@ def get_edit_count(wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
 ### Obtain data from DB ###
 ###########################
 
+
+#conn = psycopg.connect(dbname = 'postgres', 
+#                       user = 'postgres', 
+#                       host= 'localhost',
+#                       password = "postgres",
+#                       port = 5432)
+conn = psycopg.connect(dbname = 'wikidb', 
+                       user = 'postgres', 
+                       host= '192.168.2.253',
+                       password = "postgres",
+                       port = 15432)
+
+
+
 # Datasets of interest
 # dict format as needed to pass as **kwargs
 dataspec = [
@@ -114,6 +123,9 @@ dataspec = [
     {'wiki':'enwiki', 'title':'Pauline Collins'},
     {'wiki':'enwiki', 'title':'Timeline of file sharing'},
 ]
+dataspec = [
+    {'wiki':'dewiki', 'title':'Wolfgang Amadeus Mozart'},
+]
 
 
 t_datacollection0 = time.time()
@@ -122,6 +134,7 @@ for kwargs in dataspec:
     my_data = {}
     my_data['data'] = get_edit_count(**kwargs)
     my_data['infotxt'] = kwargs['wiki']+'/'+kwargs['title']
+    print(my_data)
     plotdata.append(my_data)
 t_datacollection1 = time.time()
 print(f'time for data collection: {t_datacollection1 - t_datacollection0}')
@@ -152,28 +165,27 @@ print(f'time for data collection: {t_datacollection1 - t_datacollection0}')
 #############
 ### Plots ###
 #############
+def prepare_counts_for_plot(curr_d, t0):
+    # datatype: datetime.timedelta
+    #           v-- earlier events <=> negative value (then they appear on the left of the time axis)
+    plot_dt = [ -(t0-_['t']) for _ in curr_d ]
+    plot_dt = [ _.total_seconds() for _ in plot_dt ]
+    plot_v  = [ _['value'] for _ in curr_d ]
+    return plot_dt,plot_v
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+# latest time in database (FIXME: find from data), think about timezone
+dt_max = datetime.datetime(2025, 11, 9, 19, 0)
 def plot_worker(plotdata, do_ylog=False):
     fig,hax = plt.subplots(1)
 
     # print(plotdata)
 
-    # latest time in database (FIXME: find from data), think about timezone
-    dt_max = datetime.datetime(2025, 11, 6, 16, 0)
     for curr_q in plotdata:
-        curr_d = curr_q['data']
-        # datatype: datetime.timedelta
-        #           v-- earlier events <=> negative value (then they appear on the left of the time axis)
-        plot_dt = [ -(dt_max-_['t']) for _ in curr_d ]
-        plot_dt = [ _.total_seconds() for _ in plot_dt ]
-        plot_v  = [ _['value'] for _ in curr_d ]
-        #print(plot_dt)
-        #print(plot_v)
-        hax.plot(np.array(plot_dt)/3600.0,plot_v,'+--',label=curr_q['infotxt'])
-        # break
+        (plot_dt,plot_v) = prepare_counts_for_plot(curr_q['data'], t0=dt_max)
+        hax.plot(np.array(plot_dt)/3600.0,np.array(plot_v),'+--',label=curr_q['infotxt'])
 
     hax.set_xlabel(f'time before {dt_max} [hours]')
     hax.set_ylabel('edit count/hour')
@@ -185,5 +197,6 @@ def plot_worker(plotdata, do_ylog=False):
     hax.set_title('Edit Counts (gaps in time-series not filled with zeros)')
     plt.show()
 
+# print(plotdata)
 plot_worker(plotdata)
-# plot_worker(plotdata_wiki, do_ylog=True)
+plot_worker(plotdata_wiki, do_ylog=True)
