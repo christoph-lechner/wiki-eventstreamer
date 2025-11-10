@@ -13,14 +13,21 @@ import gzip
 import signal
 from threading import Event
 
-# Force rotation after this number of events in file
-# As of 2025-Nov, the i"recentchange" gives less than 200000 events per hour (on avg, every event corresponds to about 150 bytes in the file)
-max_events_per_file=500000
+cfg = {
+    # Download of historical data (WARNING: can generate lots of data).
+    # See section "Historical Consumption" in https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service (accessed 2025-Nov-07)
+    # url_hist = 'https://stream.wikimedia.org/v2/stream/recentchange?since=2025-11-01T00:00:00Z'
+    'stream_url': 'https://stream.wikimedia.org/v2/stream/recentchange',
 
-do_gzip=True
+    # Force rotation after this number of events in file
+    # As of 2025-Nov, the i"recentchange" gives less than 200000 events per hour (on avg, every event corresponds to about 150 bytes in the file)
+    'max_events_per_file':500000,
 
-# directory holding checkpoints
-dir_checkpoints = 'streamdata/'
+    'do_gzip':True,
+
+    # output directory (absolute paths preferrable)
+    'output_directory':'/srv/wikiproj/streamdata_in',
+}
 
 #####
 
@@ -36,6 +43,9 @@ def sighandler_rot(signum, frame):
     rot_event.set()
 
 #####
+
+# directory holding checkpoints
+dir_checkpoints = cfg['output_directory']
 
 def load_checkpoint():
     # list all files in provided data directory
@@ -57,7 +67,7 @@ def load_checkpoint():
     # print(checkpoint_candidates)
     fn_checkpoint=checkpoint_candidates[0]
 
-    print(f'going to use checkpoint: {fn_checkpoint}')
+    print(f'going to resume using checkpoint: {fn_checkpoint}')
 
     with open(fn_checkpoint,'r') as fin:
         cp_status = fin.readline()
@@ -183,7 +193,7 @@ def cb_demo_user(change):
 
 def outfile_open(fn):
     # improvement: use gzip.open to write data gzip-compressed (JSON can be compressed by factor of about 5)
-    if do_gzip:
+    if cfg['do_gzip']:
         fout = gzip.open(fn,'w') # if gzip is used, caller provides filename with .gz extension
     else:
         fout = open(fn,'wb')
@@ -199,7 +209,7 @@ def outfile_rotate(status):
     print('Renamed file (to mark as ready for further processing) -> '+fnnew)
     #
     status['fn'] = status['fng'].getfn()
-    if do_gzip:
+    if cfg['do_gzip']:
         status['fn'] = status['fn']+'.gz'
     status['fout'] = outfile_open(status['fn'])
     status['events_in_file']=0
@@ -209,7 +219,7 @@ def cb_process_raw(event, status):
     if status['fng'].rot_timecrit():
         print('Rotating output file (time crit.)')
         outfile_rotate(status)
-    elif status['events_in_file']>=max_events_per_file:
+    elif status['events_in_file']>=cfg['max_events_per_file']:
         print('Rotating output file (max events reached)')
         outfile_rotate(status)
     elif rot_event.is_set():
@@ -226,9 +236,9 @@ def cb_process_raw(event, status):
 if __name__=="__main__":
     status={}
     status['events_in_file']=0
-    status['fng'] = FilenameGen()
+    status['fng'] = FilenameGen(datadir=cfg['output_directory'])
     status['fn'] = status['fng'].getfn()
-    if do_gzip:
+    if cfg['do_gzip']:
         status['fn'] = status['fn']+'.gz'
     status['fout'] = outfile_open(status['fn'])
 
@@ -241,8 +251,4 @@ if __name__=="__main__":
     signal.signal(signal.SIGTERM, sighandler_term)
     signal.signal(signal.SIGUSR1, sighandler_rot)
 
-    # Download of historical data (WARNING: can generate lots of data).
-    # See section "Historical Consumption" in https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service (accessed 2025-Nov-07)
-    url_hist = 'https://stream.wikimedia.org/v2/stream/recentchange?since=2025-11-01T00:00:00Z'
-    url_hist = 'https://stream.wikimedia.org/v2/stream/recentchange'
-    get_stream_data(url=url_hist, cb=cb_demo_user, cb_raw=cb_raw)
+    get_stream_data(url=cfg['stream_url'], cb=cb_demo_user, cb_raw=cb_raw)
