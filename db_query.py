@@ -4,6 +4,7 @@ import psycopg
 import json
 import datetime
 import time
+import pandas as pd
 
 def get_totaledit_count(cur, wiki = 'enwiki'):
     q_wiki = wiki
@@ -88,3 +89,76 @@ def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
         accu_data.append({'t':r_dt, 'value':r_value})
 
     return(accu_data)
+
+
+###########################
+### STATISTICAL QUERIES ###
+###########################
+
+
+# ISSUE: these functions expect cursor with row_factory=dict_row:
+# cur = conn.cursor(row_factory=dict_row)
+
+def get_freshness_abstimestamp(cur):
+    # add index to db speeds up this query:
+    # CREATE INDEX wiki_change_events_test_ts_event_meta_dt_idx ON wiki_change_events_test (ts_event_meta_dt);
+    cur.execute(
+        "SELECT MAX(ts_event_meta_dt) AS max_ts FROM wiki_change_events_test;"
+    )
+    res = cur.fetchone()
+    # In the database the timestamps are stored in UTC, let's obtain string in local timezone
+    # (default behavior of 'astimezone' without further params: local timezone)
+    str_localtime = res['max_ts'].astimezone().isoformat()
+    return str_localtime
+
+def get_freshness_deltat(cur):
+    cur.execute(
+        "SELECT (NOW()-MAX(ts_event_meta_dt)) AS freshness FROM wiki_change_events_test;"
+    )
+    res = cur.fetchone()
+    # time diff is returned as 'datetime.timedelta'
+    return (res['freshness'].total_seconds())
+
+# FIXME: expensive on Google BigQuery
+def get_total_eventcount(cur):
+    cur.execute(
+        "SELECT COUNT(*) AS nevents FROM wiki_change_events_test;"
+    )
+    res = cur.fetchone()
+    return (res['nevents'])
+
+def get_top_events(cur, wiki='enwiki'):
+    # TODO: for dewiki we want to exclude different article title prefixes than for enwiki
+    cur.execute(
+        """
+        SELECT
+           event_title,COUNT(*) AS c
+        FROM wiki_change_events_test
+        WHERE 
+           event_type='edit' AND event_wiki=%s 
+           AND (NOT event_title LIKE 'Talk:%%')
+           AND (NOT event_title LIKE 'User:%%') AND (NOT event_title LIKE 'User talk:%%')
+           AND (NOT event_title LIKE 'Wikipedia:%%') AND (NOT event_title LIKE 'Wikipedia talk:%%')
+        GROUP BY event_title
+        ORDER BY COUNT(*) DESC
+        LIMIT 20;
+        """,
+        (wiki,)
+    )
+
+    # for pandas DataFrame we need a "dictionary of lists", not a "list of dictionaries" (which would be better design IMO)
+    res_rows = cur.fetchall()
+    accu_data_title=[]
+    accu_data_counts=[]
+    for row in res_rows:
+        # print(row)
+        accu_data_title.append(row['event_title'])
+        accu_data_counts.append(row['c'])
+
+    accu_data = {
+        'title': accu_data_title,
+        'c': accu_data_counts,
+    }
+    df = pd.DataFrame.from_dict(data=accu_data)
+    return(df)
+
