@@ -134,8 +134,12 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
                             print('got SIGTERM -> stopping: closing output file, not deleting checkpoint file so we can resume')
                             # same code block as in outfile_rotate
                             fnold = status['fn']
+                            fnnew = fnold+'.ready'
                             print('Closing file '+fnold)
                             status['fout'].close()
+                            os.rename(fnold, fnnew)
+                            print('Renamed file (to mark as ready for further processing) -> '+fnnew)
+                            #
                             print('stopping')
                             keep_running = False
                             break
