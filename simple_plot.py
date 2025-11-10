@@ -4,93 +4,7 @@ import psycopg
 import json
 import datetime
 import time
-
-def get_totaledit_count(wiki = 'enwiki'):
-    q_wiki = wiki
-
-    cur = conn.cursor()
-
-    cur.execute(
-        """
-        SELECT
-           DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
-           COUNT(*)
-        FROM wiki_change_events_test
-        WHERE
-           event_type='edit' AND event_wiki=%s
-        GROUP BY DATE(ts_event_meta_dt), EXTRACT(HOUR FROM ts_event_meta_dt)
-        ORDER BY DATE(ts_event_meta_dt), EXTRACT(HOUR FROM ts_event_meta_dt)
-        """,
-        (q_wiki,) # !extra comma to pass tuple!
-    )
-
-    res_rows = cur.fetchall()
-    accu_data=[]
-    for row in res_rows:
-        r_date = row[0]
-        r_hour = int(row[1]) # cast to int to get rid of Decimal.decimal type
-        r_value = int(row[2])
-        # https://stackoverflow.com/q/1937622
-        r_dt = datetime.datetime(year=r_date.year,month=r_date.month,day=r_date.day,hour=r_hour)
-        accu_data.append({'t':r_dt, 'value':r_value})
-
-    return(accu_data)
-
-
-def get_edit_count(wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
-    q_wiki = wiki
-    q_title = title
-
-    cur = conn.cursor()
-
-    cur.execute(
-        """
-        WITH q AS (
-            SELECT
-               DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
-               COUNT(*)
-            FROM wiki_change_events_test
-            WHERE
-               event_type='edit' AND event_wiki=%s AND event_title=%s
-            GROUP BY
-               DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
-            ORDER BY
-               DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
-        ),
-        times_without_gap AS(
-        SELECT
-                DATE(gs) AS gs_date, EXTRACT(HOUR FROM gs) AS gs_hour
-        FROM
-                generate_series(
-                    (SELECT MIN(date) FROM q),
-
-                    -- "1+": also generate rows for the final day having data (would be truncated otherwise)
-                    1+(SELECT MAX(date) FROM q),
-                    interval '1 hour'
-                ) AS gs
-                -- TODO/FIXME: truncate this series at the last event in DB (otherwise there will be zero-padding at times later than latest value in DB)
-        )
-        SELECT
-            -- column for development purposes in pgadmin
-            -- gs_date,gs_hour,q.date,q.hour,COALESCE(q.count,-10) FROM times_without_gap
-            -- the gs_* columns are not-NULL
-            gs_date,gs_hour,COALESCE(q.count,0) FROM times_without_gap
-        LEFT JOIN q ON (q.date=gs_date AND q.hour=gs_hour);
-        """,
-        (q_wiki,q_title)
-    )
-
-    res_rows = cur.fetchall()
-    accu_data=[]
-    for row in res_rows:
-        r_date = row[0]
-        r_hour = int(row[1]) # cast to int to get rid of Decimal.decimal type
-        r_value = int(row[2])
-        # https://stackoverflow.com/q/1937622
-        r_dt = datetime.datetime(year=r_date.year,month=r_date.month,day=r_date.day,hour=r_hour)
-        accu_data.append({'t':r_dt, 'value':r_value})
-
-    return(accu_data)
+from db_query import get_totaledit_count, get_edit_count
 
 ###########################
 ### Obtain data from DB ###
@@ -107,6 +21,7 @@ conn = psycopg.connect(dbname = 'wikidb',
                        host= '192.168.2.253',
                        password = "postgres",
                        port = 15432)
+cur = conn.cursor()
 
 
 
@@ -132,7 +47,7 @@ t_datacollection0 = time.time()
 plotdata = []
 for kwargs in dataspec:
     my_data = {}
-    my_data['data'] = get_edit_count(**kwargs)
+    my_data['data'] = get_edit_count(cur, **kwargs)
     my_data['infotxt'] = kwargs['wiki']+'/'+kwargs['title']
     print(my_data)
     plotdata.append(my_data)
@@ -156,7 +71,7 @@ t_datacollection0 = time.time()
 plotdata_wiki = []
 for kwargs in dataspec_wiki:
     my_data = {}
-    my_data['data'] = get_totaledit_count(**kwargs)
+    my_data['data'] = get_totaledit_count(cur, **kwargs)
     my_data['infotxt'] = kwargs['wiki']
     plotdata_wiki.append(my_data)
 t_datacollection1 = time.time()
