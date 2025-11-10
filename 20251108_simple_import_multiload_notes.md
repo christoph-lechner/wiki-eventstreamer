@@ -10,7 +10,7 @@ $ script -f log_20250811T2030.txt
 Script started, output log file is 'log_20250811T2030.txt'.
 $ source /home/[redacted]/venv_ws/bin/activate
 
-(venv_ws) $ cat LOF | xargs -n 1 ../simple_import.py -z
+(venv_ws) $ cat LOF | xargs -n 1 ../import_and_merge/simple_import.py -z
 Input file: streamdata/stream_20251107T134442_000000001.gz.ready
 .....
 Loaded 500000 events

@@ -7,7 +7,7 @@ import gzip
 import datetime
 
 """
-Schema of table holding all data (after merging all loads):
+Outdated schema of table holding all data (after merging all loads):
 CREATE TABLE wiki_change_events(
     -- MD5 hash over a few fields, ensures deduplication (data is loaded into this table using MERGE command)
     _h TEXT UNIQUE,
@@ -24,7 +24,7 @@ CREATE TABLE wiki_change_events(
 );
 """
 
-data_table = 'wiki_change_events';
+data_table = 'wiki_change_events_test';
 stg_table_prefix = 'stg_tmp';
 do_debug = False
 
