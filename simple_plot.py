@@ -5,22 +5,13 @@ import json
 import datetime
 import time
 from db_query import get_totaledit_count, get_edit_count
+from db_conn import get_db_conn
 
 ###########################
 ### Obtain data from DB ###
 ###########################
 
-
-#conn = psycopg.connect(dbname = 'postgres', 
-#                       user = 'postgres', 
-#                       host= 'localhost',
-#                       password = "postgres",
-#                       port = 5432)
-conn = psycopg.connect(dbname = 'wikidb', 
-                       user = 'postgres', 
-                       host= '192.168.2.253',
-                       password = "postgres",
-                       port = 15432)
+conn = get_db_conn()
 cur = conn.cursor()
 
 
@@ -38,9 +29,9 @@ dataspec = [
     {'wiki':'enwiki', 'title':'Pauline Collins'},
     {'wiki':'enwiki', 'title':'Timeline of file sharing'},
 ]
-dataspec = [
-    {'wiki':'dewiki', 'title':'Wolfgang Amadeus Mozart'},
-]
+#dataspec = [
+#    {'wiki':'dewiki', 'title':'Wolfgang Amadeus Mozart'},
+#]
 
 
 t_datacollection0 = time.time()
@@ -49,7 +40,7 @@ for kwargs in dataspec:
     my_data = {}
     my_data['data'] = get_edit_count(cur, **kwargs)
     my_data['infotxt'] = kwargs['wiki']+'/'+kwargs['title']
-    print(my_data)
+    # print(my_data)
     plotdata.append(my_data)
 t_datacollection1 = time.time()
 print(f'time for data collection: {t_datacollection1 - t_datacollection0}')
