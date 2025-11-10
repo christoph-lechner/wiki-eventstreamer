@@ -202,4 +202,5 @@ if __name__=="__main__":
     # Download of historical data (WARNING: can generate lots of data).
     # See section "Historical Consumption" in https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service (accessed 2025-Nov-07)
     url_hist = 'https://stream.wikimedia.org/v2/stream/recentchange?since=2025-11-01T00:00:00Z'
+    url_hist = 'https://stream.wikimedia.org/v2/stream/recentchange'
     get_stream_data(url=url_hist, cb=cb_demo_user, cb_raw=cb_raw)
