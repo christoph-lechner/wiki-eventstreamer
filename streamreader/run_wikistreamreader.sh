@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# report git commit id
+echo "git commit id:"
+git log -1 --pretty=format:%H || echo "failed to determine git commit id"
+
+
 set -xe
 
 # set up virtual environment
