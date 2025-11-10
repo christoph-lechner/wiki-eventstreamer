@@ -57,16 +57,30 @@ def get_edit_count(wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
 
     cur.execute(
         """
+        WITH q AS (
+            SELECT
+               DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
+               COUNT(*)
+            FROM wiki_change_events_test
+            WHERE
+               event_type='edit' AND event_wiki=%s AND event_title=%s
+            GROUP BY
+               DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
+            ORDER BY
+               DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
+        ),
+        times_without_gap AS(
         SELECT
-           DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
-           COUNT(*)
-        FROM wiki_change_events_test
-        WHERE
-           event_type='edit' AND event_wiki=%s AND event_title=%s
-        GROUP BY
-           DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
-        ORDER BY
-           DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt);
+                DATE(gs) AS gs_date, EXTRACT(HOUR FROM gs) AS gs_hour
+        FROM
+                generate_series((SELECT MIN(date) FROM q), (SELECT MAX(date) FROM q), interval '1 hour') AS gs
+        )
+        SELECT
+            -- column for development purposes in pgadmin
+            -- gs_date,gs_hour,q.date,q.hour,COALESCE(q.count,-10) FROM times_without_gap
+            -- the gs_* columns are not-NULL
+            gs_date,gs_hour,COALESCE(q.count,-10) FROM times_without_gap
+        LEFT JOIN q ON (q.date=gs_date AND q.hour=gs_hour);
         """,
         (q_wiki,q_title)
     )
@@ -145,6 +159,8 @@ import numpy as np
 def plot_worker(plotdata, do_ylog=False):
     fig,hax = plt.subplots(1)
 
+    # print(plotdata)
+
     # latest time in database (FIXME: find from data), think about timezone
     dt_max = datetime.datetime(2025, 11, 6, 16, 0)
     for curr_q in plotdata:
@@ -156,7 +172,7 @@ def plot_worker(plotdata, do_ylog=False):
         plot_v  = [ _['value'] for _ in curr_d ]
         #print(plot_dt)
         #print(plot_v)
-        hax.plot(np.array(plot_dt)/3600.0,plot_v,'o--',label=curr_q['infotxt'])
+        hax.plot(np.array(plot_dt)/3600.0,plot_v,'+--',label=curr_q['infotxt'])
         # break
 
     hax.set_xlabel(f'time before {dt_max} [hours]')
@@ -170,4 +186,4 @@ def plot_worker(plotdata, do_ylog=False):
     plt.show()
 
 plot_worker(plotdata)
-plot_worker(plotdata_wiki, do_ylog=True)
+# plot_worker(plotdata_wiki, do_ylog=True)
