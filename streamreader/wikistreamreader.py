@@ -10,6 +10,8 @@ import os
 import time
 import datetime
 import gzip
+import signal
+from threading import Event
 
 # Force rotation after this number of events in file
 # As of 2025-Nov, the i"recentchange" gives less than 200000 events per hour (on avg, every event corresponds to about 150 bytes in the file)
@@ -19,6 +21,19 @@ do_gzip=True
 
 # directory holding checkpoints
 dir_checkpoints = 'streamdata/'
+
+#####
+
+# signal handlers
+
+done_event = Event()
+rot_event = Event()
+
+def sighandler_term(signum, frame):
+    done_event.set()
+
+def sighandler_rot(signum, frame):
+    rot_event.set()
 
 #####
 
@@ -93,7 +108,8 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
 
     # If no checkpoint was found, this returns None (default value of latest_event_id argument to EventSource)
     last_id = load_checkpoint()
-    while True:
+    keep_running = True # controls if we continue after leaving event processing loop
+    while keep_running:
         try:
             # Note 2025-Nov-07: It could be that providing too old checkpointing infos results in HTTP 400...
             with EventSource(url, latest_event_id=last_id, **kwargs) as stream:
@@ -114,6 +130,16 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
                             last_checkpoint = store_checkpoint(status=last_checkpoint, data=checkpoint_data)
                             checkpoint_throttle_cntr=0
 
+                        if done_event.is_set():
+                            print('got SIGTERM -> stopping: closing output file, not deleting checkpoint file so we can resume')
+                            # same code block as in outfile_rotate
+                            fnold = status['fn']
+                            print('Closing file '+fnold)
+                            status['fout'].close()
+                            print('stopping')
+                            keep_running = False
+                            break
+
                         # process the *raw* event
                         if cb_raw is not None:
                             cb_raw(event)
@@ -133,6 +159,7 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
                         # further processing in user-provided callback function (parsed JSON)
                         if cb is not None:
                             cb(change)
+                        
         except InvalidStatusCodeError as e:
             print(f'EventSource: HTTP status code: {e.status_code}. Retrying...')
             time.sleep(5)
@@ -181,6 +208,11 @@ def cb_process_raw(event, status):
     elif status['events_in_file']>=max_events_per_file:
         print('Rotating output file (max events reached)')
         outfile_rotate(status)
+    elif rot_event.is_set():
+        rot_event.clear() # need to manually clear it, so we don't fire again
+        print('Rotating output file (SIGUSR1 received)')
+        outfile_rotate(status)
+
 
     status['fout'].write(event.data.encode())
     status['fout'].write(b'\n')
@@ -198,6 +230,12 @@ if __name__=="__main__":
 
     # lambda captures local dict for status management
     cb_raw = lambda event_: cb_process_raw(event_, status)
+
+    # Install signal handlers
+    # SIGTERM is handled for graceful termination
+    # SIGUSR1 is handled to trigger rotation of output file
+    signal.signal(signal.SIGTERM, sighandler_term)
+    signal.signal(signal.SIGUSR1, sighandler_rot)
 
     # Download of historical data (WARNING: can generate lots of data).
     # See section "Historical Consumption" in https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service (accessed 2025-Nov-07)
