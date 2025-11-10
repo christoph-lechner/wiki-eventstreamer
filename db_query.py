@@ -71,7 +71,7 @@ def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
             -- column for development purposes in pgadmin
             -- gs_date,gs_hour,q.date,q.hour,COALESCE(q.count,-10) FROM times_without_gap
             -- the gs_* columns are not-NULL
-            gs_date,gs_hour,COALESCE(q.count,-10) FROM times_without_gap
+            gs_date,gs_hour,COALESCE(q.count,0) FROM times_without_gap
         LEFT JOIN q ON (q.date=gs_date AND q.hour=gs_hour);
         """,
         (q_wiki,q_title)
