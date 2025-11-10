@@ -19,7 +19,8 @@ conn = get_db_conn()
 from psycopg.rows import dict_row
 cur = conn.cursor(row_factory=dict_row)
 
-df = get_top_events(cur, wiki='enwiki')
+# passing something as value of 'since' currrently switches on hard-coded temporal cut
+df = get_top_events(cur, wiki='enwiki', since='x')
 print(df)
 
 print('== freshness ==')

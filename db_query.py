@@ -127,15 +127,22 @@ def get_total_eventcount(cur):
     res = cur.fetchone()
     return (res['nevents'])
 
-def get_top_events(cur, wiki='enwiki'):
+def get_top_events(cur, wiki='enwiki', since=None):
+    if since is None:
+        str_since = '1900-01-01'
+    else:
+        # FIXME: hardcoded
+        str_since = '2025-11-10'
+
     # TODO: for dewiki we want to exclude different article title prefixes than for enwiki
     cur.execute(
         """
         SELECT
            event_title,COUNT(*) AS c
         FROM wiki_change_events_test
-        WHERE 
-           event_type='edit' AND event_wiki=%s 
+        WHERE
+           ts_event_meta_dt>=%s
+           AND event_type='edit' AND event_wiki=%s
            AND (NOT event_title LIKE 'Talk:%%')
            AND (NOT event_title LIKE 'User:%%') AND (NOT event_title LIKE 'User talk:%%')
            AND (NOT event_title LIKE 'Wikipedia:%%') AND (NOT event_title LIKE 'Wikipedia talk:%%')
@@ -143,7 +150,7 @@ def get_top_events(cur, wiki='enwiki'):
         ORDER BY COUNT(*) DESC
         LIMIT 20;
         """,
-        (wiki,)
+        (str_since,wiki)
     )
 
     # for pandas DataFrame we need a "dictionary of lists", not a "list of dictionaries" (which would be better design IMO)
