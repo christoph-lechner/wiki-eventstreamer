@@ -17,5 +17,6 @@ st.write('# Top20: Edits')
 """
 This is a list of articles in the English edition of Wikipedia that saw most edits since 2025-11-10, 00:00:01 UTC.
 """
-df = get_top_events(cur, wiki='enwiki', since='x')
-df
+with st.spinner("Preparing statistics..."):
+    df = get_top_events(cur, wiki='enwiki', since='x')
+    df

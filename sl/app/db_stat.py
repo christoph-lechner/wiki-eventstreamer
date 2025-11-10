@@ -19,9 +19,11 @@ On this page, a few statistics about the underlying database are compiled.
 """
 
 st.write('## DB Freshness Infos')
-st.write('Abbsolute timestamp of most recent event in DB: '+get_freshness_abstimestamp(cur))
-st.write('Age of this event in seconds: ' + f'{get_freshness_deltat(cur)}')
+with st.spinner("Preparing statistics..."):
+    st.write('Absolute timestamp of most recent event in DB: '+get_freshness_abstimestamp(cur))
+    st.write('Age of this event in seconds: ' + f'{get_freshness_deltat(cur)}')
 
 st.write('## DB Stats')
-st.write('Total number of events in DB: ' + f'{get_total_eventcount(cur)}')
+with st.spinner("Preparing statistics..."):
+    st.write('Total number of events in DB: ' + f'{get_total_eventcount(cur)}')
 
