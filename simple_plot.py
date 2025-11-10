@@ -4,88 +4,17 @@ import psycopg
 import json
 import datetime
 import time
-
-#conn = psycopg.connect(dbname = 'postgres', 
-#                       user = 'postgres', 
-#                       host= 'localhost',
-#                       password = "postgres",
-#                       port = 5432)
-conn = psycopg.connect(dbname = 'wikidb', 
-                       user = 'postgres', 
-                       host= '192.168.2.253',
-                       password = "postgres",
-                       port = 15432)
-
-
-def get_totaledit_count(wiki = 'enwiki'):
-    q_wiki = wiki
-
-    cur = conn.cursor()
-
-    cur.execute(
-        """
-        SELECT
-           DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
-           COUNT(*)
-        FROM wiki_change_events_test
-        WHERE
-           event_type='edit' AND event_wiki=%s
-        GROUP BY DATE(ts_event_meta_dt), EXTRACT(HOUR FROM ts_event_meta_dt)
-        ORDER BY DATE(ts_event_meta_dt), EXTRACT(HOUR FROM ts_event_meta_dt)
-        """,
-        (q_wiki,) # !extra comma to pass tuple!
-    )
-
-    res_rows = cur.fetchall()
-    accu_data=[]
-    for row in res_rows:
-        r_date = row[0]
-        r_hour = int(row[1]) # cast to int to get rid of Decimal.decimal type
-        r_value = int(row[2])
-        # https://stackoverflow.com/q/1937622
-        r_dt = datetime.datetime(year=r_date.year,month=r_date.month,day=r_date.day,hour=r_hour)
-        accu_data.append({'t':r_dt, 'value':r_value})
-
-    return(accu_data)
-
-
-def get_edit_count(wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
-    q_wiki = wiki
-    q_title = title
-
-    cur = conn.cursor()
-
-    cur.execute(
-        """
-        SELECT
-           DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
-           COUNT(*)
-        FROM wiki_change_events_test
-        WHERE
-           event_type='edit' AND event_wiki=%s AND event_title=%s
-        GROUP BY
-           DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt)
-        ORDER BY
-           DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt);
-        """,
-        (q_wiki,q_title)
-    )
-
-    res_rows = cur.fetchall()
-    accu_data=[]
-    for row in res_rows:
-        r_date = row[0]
-        r_hour = int(row[1]) # cast to int to get rid of Decimal.decimal type
-        r_value = int(row[2])
-        # https://stackoverflow.com/q/1937622
-        r_dt = datetime.datetime(year=r_date.year,month=r_date.month,day=r_date.day,hour=r_hour)
-        accu_data.append({'t':r_dt, 'value':r_value})
-
-    return(accu_data)
+from db_query import get_totaledit_count, get_edit_count
+from db_conn import get_db_conn
 
 ###########################
 ### Obtain data from DB ###
 ###########################
+
+conn = get_db_conn()
+cur = conn.cursor()
+
+
 
 # Datasets of interest
 # dict format as needed to pass as **kwargs
@@ -100,14 +29,18 @@ dataspec = [
     {'wiki':'enwiki', 'title':'Pauline Collins'},
     {'wiki':'enwiki', 'title':'Timeline of file sharing'},
 ]
+#dataspec = [
+#    {'wiki':'dewiki', 'title':'Wolfgang Amadeus Mozart'},
+#]
 
 
 t_datacollection0 = time.time()
 plotdata = []
 for kwargs in dataspec:
     my_data = {}
-    my_data['data'] = get_edit_count(**kwargs)
+    my_data['data'] = get_edit_count(cur, **kwargs)
     my_data['infotxt'] = kwargs['wiki']+'/'+kwargs['title']
+    # print(my_data)
     plotdata.append(my_data)
 t_datacollection1 = time.time()
 print(f'time for data collection: {t_datacollection1 - t_datacollection0}')
@@ -129,7 +62,7 @@ t_datacollection0 = time.time()
 plotdata_wiki = []
 for kwargs in dataspec_wiki:
     my_data = {}
-    my_data['data'] = get_totaledit_count(**kwargs)
+    my_data['data'] = get_totaledit_count(cur, **kwargs)
     my_data['infotxt'] = kwargs['wiki']
     plotdata_wiki.append(my_data)
 t_datacollection1 = time.time()
@@ -138,26 +71,27 @@ print(f'time for data collection: {t_datacollection1 - t_datacollection0}')
 #############
 ### Plots ###
 #############
+def prepare_counts_for_plot(curr_d, t0):
+    # datatype: datetime.timedelta
+    #           v-- earlier events <=> negative value (then they appear on the left of the time axis)
+    plot_dt = [ -(t0-_['t']) for _ in curr_d ]
+    plot_dt = [ _.total_seconds() for _ in plot_dt ]
+    plot_v  = [ _['value'] for _ in curr_d ]
+    return plot_dt,plot_v
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+# latest time in database (FIXME: find from data), think about timezone
+dt_max = datetime.datetime(2025, 11, 9, 19, 0)
 def plot_worker(plotdata, do_ylog=False):
     fig,hax = plt.subplots(1)
 
-    # latest time in database (FIXME: find from data), think about timezone
-    dt_max = datetime.datetime(2025, 11, 6, 16, 0)
+    # print(plotdata)
+
     for curr_q in plotdata:
-        curr_d = curr_q['data']
-        # datatype: datetime.timedelta
-        #           v-- earlier events <=> negative value (then they appear on the left of the time axis)
-        plot_dt = [ -(dt_max-_['t']) for _ in curr_d ]
-        plot_dt = [ _.total_seconds() for _ in plot_dt ]
-        plot_v  = [ _['value'] for _ in curr_d ]
-        #print(plot_dt)
-        #print(plot_v)
-        hax.plot(np.array(plot_dt)/3600.0,plot_v,'o--',label=curr_q['infotxt'])
-        # break
+        (plot_dt,plot_v) = prepare_counts_for_plot(curr_q['data'], t0=dt_max)
+        hax.plot(np.array(plot_dt)/3600.0,np.array(plot_v),'+--',label=curr_q['infotxt'])
 
     hax.set_xlabel(f'time before {dt_max} [hours]')
     hax.set_ylabel('edit count/hour')
@@ -169,5 +103,6 @@ def plot_worker(plotdata, do_ylog=False):
     hax.set_title('Edit Counts (gaps in time-series not filled with zeros)')
     plt.show()
 
+# print(plotdata)
 plot_worker(plotdata)
 plot_worker(plotdata_wiki, do_ylog=True)
