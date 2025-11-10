@@ -6,7 +6,7 @@ from db_conn import get_db_conn
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="databse statistics", page_icon=":material/table:")
+st.set_page_config(page_title="Top20", page_icon=":material/table:")
 
 conn = get_db_conn()
 # https://www.psycopg.org/psycopg3/docs/advanced/rows.html#row-factories
@@ -20,3 +20,59 @@ This is a list of articles in the English edition of Wikipedia that saw most edi
 with st.spinner("Preparing statistics..."):
     df = get_top_events(cur, wiki='enwiki', since='x')
     df
+
+
+cur = conn.cursor()
+
+#########################
+### from plot_hist.py ###
+#########################
+def getit(dataspec):
+    t_datacollection0 = time.time()
+    plotdata = []
+    for kwargs in dataspec:
+        my_data = {}
+        my_data['data'] = get_edit_count(cur, **kwargs)
+        my_data['infotxt'] = kwargs['wiki']+'/'+kwargs['title']
+        # print(my_data)
+        plotdata.append(my_data)
+    t_datacollection1 = time.time()
+    print(f'time for data collection: {t_datacollection1 - t_datacollection0}')
+
+    df = pd.DataFrame.from_dict(data=my_data['data'])
+    return(df)
+
+
+st.write(
+"""
+## History plots first the first pages in the list
+Some of these pages might have been created only very recently.
+Therefore, the plots may habe different time spans (horizontal axis).
+
+**TODO:** Rework so that the traces are plotted over the same time axis.
+"""
+)
+
+row_cntr=0
+for row in df.iterrows():
+    row_cntr += 1
+    if row_cntr>10:
+        break
+
+    title = row[1]['title']
+    print(title)
+
+    st.write(
+        f"""
+        ### Edits for Pos {row_cntr}: "{title}" in enwiki
+        """
+    )
+    # Dataset of interest
+    # dict format as needed to pass as **kwargs
+    dataspec = [
+        # {'wiki':'enwiki', 'title':'2025 New York City mayoral election'},
+        {'wiki':'enwiki', 'title':title},
+    ]
+    df = getit(dataspec)
+    st.line_chart(df, x='t', y='value', x_label='Date/Time', y_label='Changes / Hour')
+
