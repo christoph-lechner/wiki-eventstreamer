@@ -70,7 +70,7 @@ In case the program is restarted, the `checkpoint_*` file contains information t
 * SIGTERM results in output file being closed (checkpoint file is **not** removed). For instance, this signal is sent by `systemd` when the system is being rebooted.
 * SIGUSR1 triggers output file rotation
 
-#### Signal `SIGUSR1` triggers output file rotation
+#### Example: Signal `SIGUSR1` triggers output file rotation
 Before:
 ```
 dataacq@demosrv:~/wiki/wiki-eventstreamer/streamreader$ ls -l streamdata/
