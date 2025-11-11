@@ -48,8 +48,10 @@ cl@ubuntu:~$
 ```
 Note that dataxfer was not added to the new group.
 
-## Preparing SSH login with public key auth
+## Setting up SSH login with public key auth
 This will be needed for automatic transfers of the stored data.
+
+### ONLY IF NEEDED: prepare public key
 ```
 cl@clsrv:~$ ssh-keygen
 Generating public/private ed25519 key pair.
@@ -67,11 +69,14 @@ The key's randomart image is:
 cl@clsrv:~$
 ```
 
+### Transfer public key to target account
+Since password-based log in as `dataxfer` is disabled, the following manual way is pursued.
 ```
 cl@clsrv:~/.ssh$ cat id_ed25519.pub 
 ssh-ed25519 [redacted] cl@clsrv
 ```
 
+On the server on which the streamreader will be running:
 ```
 cl@ubuntu:~$ sudo -i
 root@ubuntu:~# su - dataxfer
@@ -86,6 +91,7 @@ total 4
 dataxfer@ubuntu:~/.ssh$ chmod 600 authorized_keys 
 dataxfer@ubuntu:~/.ssh$
 ```
+
 
 ## Prepare data directory
 ```
