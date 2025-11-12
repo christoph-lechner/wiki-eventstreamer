@@ -13,8 +13,7 @@ st.set_page_config(page_title="Edits over time", page_icon=":material/table:")
 conn = get_db_conn()
 # https://www.psycopg.org/psycopg3/docs/advanced/rows.html#row-factories
 from psycopg.rows import dict_row
-cur = conn.cursor()
-
+cur = conn.cursor(row_factory=dict_row)
 
 
 

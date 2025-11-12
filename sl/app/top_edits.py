@@ -22,8 +22,6 @@ with st.spinner("Preparing statistics..."):
     df
 
 
-cur = conn.cursor()
-
 #########################
 ### from plot_hist.py ###
 #########################
