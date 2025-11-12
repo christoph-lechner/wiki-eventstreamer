@@ -6,6 +6,11 @@ import datetime
 import time
 import pandas as pd
 
+
+# NOTE: these functions expect cursor with row_factory=dict_row:
+# cur = conn.cursor(row_factory=dict_row)
+
+
 def get_totaledit_count(cur, wiki = 'enwiki'):
     q_wiki = wiki
 
@@ -13,7 +18,7 @@ def get_totaledit_count(cur, wiki = 'enwiki'):
         """
         SELECT
            DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
-           COUNT(*)
+           COUNT(*) AS c
         FROM wiki_change_events_test
         WHERE
            event_type='edit' AND event_wiki=%s
@@ -26,9 +31,9 @@ def get_totaledit_count(cur, wiki = 'enwiki'):
     res_rows = cur.fetchall()
     accu_data=[]
     for row in res_rows:
-        r_date = row[0]
-        r_hour = int(row[1]) # cast to int to get rid of Decimal.decimal type
-        r_value = int(row[2])
+        r_date = row['date']
+        r_hour = int(row['hour']) # cast to int to get rid of Decimal.decimal type
+        r_value = int(row['c'])
         # https://stackoverflow.com/q/1937622
         r_dt = datetime.datetime(year=r_date.year,month=r_date.month,day=r_date.day,hour=r_hour)
         accu_data.append({'t':r_dt, 'value':r_value})
@@ -45,7 +50,7 @@ def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
         WITH q AS (
             SELECT
                DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
-               COUNT(*),
+               COUNT(*) AS c,
                 -- To determine time range for zero-gap filling in result
                 -- MIN(ts_event_meta_dt) AS col_min, MAX(ts_event_meta_dt) AS col_max,
                 -- need start of hour, see https://www.postgresql.org/docs/current/functions-datetime.html
@@ -72,7 +77,7 @@ def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
             -- column for development purposes in pgadmin
             -- gs_date,gs_hour,q.date,q.hour,COALESCE(q.count,-10) FROM times_without_gap
             -- the gs_* columns are not-NULL
-            gs_date,gs_hour,COALESCE(q.count,0) FROM times_without_gap
+            gs_date,gs_hour,COALESCE(q.c,0) AS c FROM times_without_gap
         LEFT JOIN q ON (q.date=gs_date AND q.hour=gs_hour);
         """,
         (q_wiki,q_title)
@@ -81,9 +86,9 @@ def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
     res_rows = cur.fetchall()
     accu_data=[]
     for row in res_rows:
-        r_date = row[0]
-        r_hour = int(row[1]) # cast to int to get rid of Decimal.decimal type
-        r_value = int(row[2])
+        r_date = row['gs_date']
+        r_hour = int(row['gs_hour']) # cast to int to get rid of Decimal.decimal type
+        r_value = int(row['c'])
         # https://stackoverflow.com/q/1937622
         r_dt = datetime.datetime(year=r_date.year,month=r_date.month,day=r_date.day,hour=r_hour)
         accu_data.append({'t':r_dt, 'value':r_value})
@@ -95,9 +100,6 @@ def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
 ### STATISTICAL QUERIES ###
 ###########################
 
-
-# ISSUE: these functions expect cursor with row_factory=dict_row:
-# cur = conn.cursor(row_factory=dict_row)
 
 def get_freshness_abstimestamp(cur):
     # add index to db speeds up this query:

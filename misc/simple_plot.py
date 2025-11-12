@@ -12,8 +12,10 @@ from db_conn import get_db_conn
 ###########################
 
 conn = get_db_conn()
-cur = conn.cursor()
 
+# https://www.psycopg.org/psycopg3/docs/advanced/rows.html#row-factories
+from psycopg.rows import dict_row
+cur = conn.cursor(row_factory=dict_row)
 
 
 # Datasets of interest
