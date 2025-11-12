@@ -48,6 +48,11 @@ cl@ubuntu:~$
 ```
 Note that dataxfer was not added to the new group.
 
+2025-11-11: For `rsync` based file transfers, dataxfer was added to the group
+```
+cl@ubuntu:~$ sudo adduser dataxfer wikidata
+```
+
 ## Setting up SSH login with public key auth
 This will be needed for automatic transfers of the stored data.
 
