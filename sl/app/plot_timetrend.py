@@ -5,6 +5,8 @@ from db_query import get_totaledit_count, get_edit_count, get_top_events, get_to
 from db_conn import get_db_conn
 import pandas as pd
 import streamlit as st
+import plotly.express as px
+import itertools
 
 use_materialized=True
 
@@ -44,14 +46,30 @@ def worker():
     selected_wikis = st.multiselect('Select Wikis to plot', avail_wikis,['enwiki','dewiki'])
     with_bots = st.checkbox('Also count changes by "bots"', True)
     with_ylog = st.checkbox('use vertical log scale', False)
+    #
+    with_user_defined_timerange = st.checkbox('enter date range to plot', False)
+    user_def_timerange_start = None
+    user_def_timerange_end = None
+    if with_user_defined_timerange:
+        st.write('Enter the date range to plot (Note: as of now, you can specify the days, the time is always assumed to be midnight UTC)')
+        user_def_timerange_start = st.date_input('start date', datetime.datetime.today() - datetime.timedelta(days=7))
+        user_def_timerange_end = st.date_input('end date (including this day)', datetime.datetime.today())
+        if user_def_timerange_start+datetime.timedelta(days=1)>user_def_timerange_end:
+            st.error('Provided dates have to meet the following: Start date earlier than end date; minimum length of time interval: 1 day. Adjusting start date accordingly.')
+            user_def_timerange_start = user_def_timerange_end - datetime.timedelta(days=1)
 
-    # input sanitization (accept only wikis that we know)
+    # st.write(f'{user_def_timerange_start} -- {user_def_timerange_end}')
+
+    ### input sanitization (accept only wikis that we know) ###
     selected_wikis = [_ for _ in selected_wikis if _ in set(avail_wikis)]
     n_selected_wikis = len(selected_wikis)
     if not selected_wikis:
         st.error('Please select at least one wiki.')
         return
 
+    #######################
+    ### build sql query ###
+    #######################
     # Example query for four wikis selected:
     # SELECT
     #   DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
@@ -64,6 +82,7 @@ def worker():
     # GROUP BY date,hour
     # ORDER BY date,hour
 
+    # when computing everything from scratch (makes app less responsive)
     def execquery_notmat():
         cntr=1
         def_cntrcols = []
@@ -97,6 +116,7 @@ def worker():
         df = df.rename(columns=pd_colmap)
         return(df)
 
+    # when using materialized statistical data
     def execquery_mat():
         if with_bots:
             use_col = 'count_bot_flagignore'
@@ -105,11 +125,12 @@ def worker():
         cntr=1
         def_cntrcols = []
         query_args = []
+        query_args_cols = []
         pd_colmap = {} # for naming colums in pandas DataFrame (for plot preparation)
         for w in selected_wikis:
             # NOTE: the actual string values are not inserted here (to exluce any risk for SQL injection)
             def_cntrcols.append(f'SUM((CASE WHEN event_wiki=%s THEN {use_col} END)) AS c{cntr}')
-            query_args.append(w)
+            query_args_cols.append(w)
             pd_colmap[f'c{cntr}'] = w
             cntr+=1
 
@@ -117,9 +138,17 @@ def worker():
         qstr += ','.join(def_cntrcols)
         qstr += ' FROM wiki_matview_countsedits '
         qstr += "WHERE event_wiki IN (" +(','.join(n_selected_wikis*['%s']))+ ") "
+        query_args = 2*query_args_cols # duplicate the list: first for column definition ("SUM(...)"), secondly for "WHERE event_wiki IN (...)"
+        # if user-defined time ranges are provided, add placeholders to the query (and simultaneously the data to the list of arguments)
+        if user_def_timerange_start:
+            qstr += " AND date>=%s "
+            query_args.append(user_def_timerange_start)
+        if user_def_timerange_end:
+            qstr += " AND date<=%s "
+            query_args.append(user_def_timerange_end)
         qstr += 'GROUP BY date,hour ORDER BY date,hour;'
         # print(qstr)
-        cur.execute(qstr, 2*query_args)
+        cur.execute(qstr, query_args)
         res_rows = cur.fetchall()
         for r in res_rows:
             # r['ts'] = r['date']
@@ -143,10 +172,8 @@ def worker():
     #print(prop_cycle)
     plt_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
-    import itertools
     iter_color = itertools.cycle(plt_colors)
 
-    import plotly.express as px
     fig = px.line(df, x='ts', y=selected_wikis, log_y=with_ylog, color_discrete_sequence=list(itertools.islice(iter_color, len(selected_wikis))) )
     fig.update_layout(xaxis_title='time', yaxis_title='edits/hour', legend=dict(
         orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1.0
