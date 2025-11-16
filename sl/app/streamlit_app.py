@@ -27,11 +27,11 @@ def run() -> None:
                 st.Page(
                     dir_path / "hello.py", title="Hello", icon=":material/waving_hand:"
                 ),
-                st.Page(
-                    dir_path / "top_edits.py",
-                    title="top20",
-                    icon=":material/table:",
-                ),
+                #st.Page(
+                #    dir_path / "top_edits.py",
+                #    title="top20",
+                #    icon=":material/table:",
+                #),
                 #st.Page(
                 #    dir_path / "plot_hist.py",
                 #    title="Edits over time",
