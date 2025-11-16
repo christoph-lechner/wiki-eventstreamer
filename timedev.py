@@ -3,6 +3,8 @@
 # Christoph Lechner, 2025-11-16
 # Demo program to study options for measuring execution time with decorators
 
+# online resource: https://realpython.com/primer-on-python-decorators/
+
 import datetime
 import time
 from functools import wraps
