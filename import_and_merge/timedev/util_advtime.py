@@ -55,31 +55,31 @@ class MyTimer:
             f(curr_stat)
 
 
-@MyTimer.timeit
-def do_something():
-    # do ... important ... work
-    time.sleep(2)
-    return
-
-# !must provide name of the argument here!
-@MyTimer.timeit(infotxt='Hallo')
-def do_work():
-    # do ... important ... work
-    time.sleep(2)
-    return
-
-# Finally, let's demonstrate that the infotxt passed to the decorator
-# of a sub-function can depend on the argument passed to the function.
-def do_cool_things(arg):
-    @MyTimer.timeit(infotxt=arg)
-    def f():
-        print('... Hello from f ...')
-        time.sleep(1)
-        return
-    f()
-
-
 if __name__=="__main__":
+    @MyTimer.timeit
+    def do_something():
+        # do ... important ... work
+        time.sleep(2)
+        return
+
+    # !must provide name of the argument here!
+    @MyTimer.timeit(infotxt='Hallo')
+    def do_work():
+        # do ... important ... work
+        time.sleep(2)
+        return
+
+    # Finally, let's demonstrate that the infotxt passed to the decorator
+    # of a sub-function can depend on the argument passed to the function.
+    def do_cool_things(arg):
+        @MyTimer.timeit(infotxt=arg)
+        def f():
+            print('... Hello from f ...')
+            time.sleep(1)
+            return
+        f()
+
+
     # let's do a few function calls
     do_something()
     do_work()
