@@ -16,23 +16,31 @@ cur = conn.cursor(row_factory=dict_row)
 st.write('# Edits: Time Trends')
 
 def worker():
-    cur.execute(
-        """
-        SELECT event_wiki,COUNT(*) AS c
-        FROM wiki_change_events_test
-        WHERE event_type='edit'
-        GROUP BY event_wiki
-        ORDER BY COUNT(*) DESC;
-        """
-    )
-    res_rows = cur.fetchall()
-    avail_wikis = []
-    for row in res_rows:
-        avail_wikis.append(row['event_wiki'])
-        # break
+    @st.cache_data(ttl=600)
+    def get_list_of_wikis():
+        cur.execute(
+            """
+            SELECT event_wiki,COUNT(*) AS c
+            FROM wiki_change_events_test
+            WHERE event_type='edit'
+            GROUP BY event_wiki
+            ORDER BY COUNT(*) DESC;
+            """
+        )
+        res_rows = cur.fetchall()
+        avail_wikis = []
+        for row in res_rows:
+            avail_wikis.append(row['event_wiki'])
+            # break
+        return avail_wikis
 
-    selected_wikis = st.multiselect('Choose Wikis', avail_wikis,[])
+    # user interface
+    avail_wikis = get_list_of_wikis()
+    selected_wikis = st.multiselect('Choose Wikis', avail_wikis,['enwiki','dewiki'])
     with_bots = st.checkbox('Include changes by "bots"', True)
+
+    # input sanitization (accept only wikis that we know)
+    selected_wikis = [_ for _ in selected_wikis if _ in set(avail_wikis)]
     n_selected_wikis = len(selected_wikis)
     if not selected_wikis:
         st.error('Please select at least one wiki.')
@@ -83,6 +91,11 @@ def worker():
     df = df.rename(columns=pd_colmap)
     print(df)
     st.line_chart(df, x='ts', y=selected_wikis, x_label='Date/Time', y_label='Changes / Hour')
+
+
+#####
+#####
+#####
 
 with st.spinner("Preparing statistics..."):
     worker()
