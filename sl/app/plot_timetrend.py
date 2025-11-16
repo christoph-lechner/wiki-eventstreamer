@@ -102,7 +102,7 @@ def worker():
     iter_color = itertools.cycle(plt_colors)
 
     import plotly.express as px
-    fig = px.line(df, x='ts', y=selected_wikis, log_y=with_ylog) # , color='category', color_discrete_sequence=plt_colors
+    fig = px.line(df, x='ts', y=selected_wikis, log_y=with_ylog, color_discrete_sequence=list(itertools.islice(iter_color, len(selected_wikis))) )
     fig.update_layout(xaxis_title='time', yaxis_title='edits/hour', legend=dict(
         orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1.0
     ))
