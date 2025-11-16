@@ -39,7 +39,8 @@ def cb_report(conn,cur,s):
     infotxt = None
     if 'infotxt' in s:
         infotxt = s['infotxt']
-    
+
+    infotxt = 'DEMO ' + infotxt
     cur.execute('INSERT INTO wiki_loaderperfdata (tstart,dur,func,infotxt) VALUES (%s,%s,%s,%s)', (s['tstart'],s['dur'],s['func'],infotxt))
     print(s)
 
