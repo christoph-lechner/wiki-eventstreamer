@@ -188,6 +188,55 @@ rowcount_final_merge = cur.rowcount
 
 conn.commit()
 cur.close()
+
+#############################################################
+### LOADING AND MERGING COMPLETE                          ###
+### UPDATE MATERIALIZED VIEWS                             ###
+### For the current development phase: to be more robust, ###
+### we do this in a second transaction                    ###
+#############################################################
+
+from util_advtime import MyTimer
+
+# obtain cursor to perform database operations
+cur = conn.cursor()
+
+def update_matview(viewname):
+    @MyTimer.timeit(infotxt=f'Update {viewname}')
+    def worker(viewname):
+        """
+        Function that does the actual work. Added this to be able to use
+        wrapper with parameter depending on argument to the outer function.
+        """
+        print(f'Updating view {viewname} ...')
+        cur.execute(f'REFRESH MATERIALIZED VIEW {viewname};')
+
+    worker(viewname)
+
+
+# for schema, see demo.py
+def cb_report(conn,cur,s):
+    infotxt = None
+    if 'infotxt' in s:
+        infotxt = s['infotxt']
+    
+    cur.execute('INSERT INTO wiki_loaderperfdata (tstart,dur,func,infotxt) VALUES (%s,%s,%s,%s)', (s['tstart'],s['dur'],s['func'],infotxt))
+    # print(s)
+
+
+
+matviews_to_update = ['wiki_matview_countsall', 'wiki_matview_countsedits']
+for cur_view in matviews_to_update:
+    update_matview(cur_view)
+
+# Storing of the collected statistical information should be done in
+# a separate transaction. If something goes wrong, it does not break
+# the operation of the main program.
+print('Storing collected time stats')
+MyTimer.report1(lambda obj: cb_report(conn,cur,obj))
+
+conn.commit()
+cur.close()
 conn.close()
 
 print(f'DONE: {rowcount_final_merge}/{rowcount_file} rows from file got merged into data table')
