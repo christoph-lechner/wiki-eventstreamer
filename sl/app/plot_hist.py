@@ -3,7 +3,7 @@
 import psycopg
 import datetime
 import time
-from db_query import get_totaledit_count, get_edit_count, get_top_events, get_freshness_deltat,get_freshness_abstimestamp,get_total_eventcount
+from db_query import get_totaledit_count, get_edit_count, get_top_events, get_total_eventcount
 from db_conn import get_db_conn
 import pandas as pd
 import streamlit as st

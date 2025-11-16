@@ -41,12 +41,26 @@ def get_totaledit_count(cur, wiki = 'enwiki'):
     return(accu_data)
 
 
-def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
+def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976', timerange_min=None, timerange_max=None):
     q_wiki = wiki
     q_title = title
 
+    def helper_timerange(timerange_arg, minmax):
+        if timerange_arg is None:
+            if minmax=='max':
+                return '(SELECT MAX(col_min_startofhour) FROM q)'
+            elif minmax=='min':
+                return '(SELECT MIN(col_min_startofhour) FROM q)'
+            else:
+                raise ValueError('specify one of "min" or "max"')
+        # also for instances of datetime.datetime, isinstance(..., datetime.date) -> True
+        if not isinstance(timerange_arg, datetime.date):
+            raise ValueError()
+        return "'"+str(timerange_arg)+"'"
+
+
     cur.execute(
-        """
+        f"""
         WITH q AS (
             SELECT
                DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
@@ -68,8 +82,10 @@ def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
                 DATE(gs) AS gs_date, EXTRACT(HOUR FROM gs) AS gs_hour
         FROM
                 generate_series(
-                    (SELECT MIN(col_min_startofhour) FROM q),
-                    (SELECT MAX(col_min_startofhour) FROM q),
+                    -- (SELECT MIN(col_min_startofhour) FROM q),
+                    {   helper_timerange(timerange_min,'min')   }  ,
+                    -- (SELECT MAX(col_min_startofhour) FROM q),
+                    {   helper_timerange(timerange_max,'max')   }  ,
                     interval '1 hour'
                 ) AS gs
         )
@@ -101,17 +117,23 @@ def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976'):
 ###########################
 
 
-def get_freshness_abstimestamp(cur):
+def get_freshness_getoldest_abs(cur):
+    # add index to db speeds up this query:
+    # CREATE INDEX wiki_change_events_test_ts_event_meta_dt_idx ON wiki_change_events_test (ts_event_meta_dt);
+    cur.execute(
+        "SELECT MIN(ts_event_meta_dt) AS min_ts FROM wiki_change_events_test;"
+    )
+    res = cur.fetchone()
+    return res['min_ts']
+
+def get_freshness_abs(cur):
     # add index to db speeds up this query:
     # CREATE INDEX wiki_change_events_test_ts_event_meta_dt_idx ON wiki_change_events_test (ts_event_meta_dt);
     cur.execute(
         "SELECT MAX(ts_event_meta_dt) AS max_ts FROM wiki_change_events_test;"
     )
     res = cur.fetchone()
-    # In the database the timestamps are stored in UTC, let's obtain string in local timezone
-    # (default behavior of 'astimezone' without further params: local timezone)
-    str_localtime = res['max_ts'].astimezone().isoformat()
-    return str_localtime
+    return res['max_ts']
 
 def get_freshness_deltat(cur):
     cur.execute(

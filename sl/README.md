@@ -1,3 +1,9 @@
+# Streamlit App
+## Introduction
+
+The Python source code behind the application can be found in the `app/` subdirectory.
+
+## Collection oif Selected Docker commands
 To build the image, run in this directory:
 ```
 docker build -t streamlit .
@@ -19,3 +25,6 @@ Location of streamlit hello app:
 ```
 
 Copy the files in this directory to the `app` sub-directory and run streamlit Docker image. They you can play around with the demo.
+
+### Online Resources
+* [https://docker-curriculum.com/](https://docker-curriculum.com/)

@@ -1,7 +1,7 @@
 import psycopg
 import datetime
 import time
-from db_query import get_totaledit_count, get_edit_count, get_top_events, get_freshness_deltat,get_freshness_abstimestamp,get_total_eventcount
+from db_query import get_totaledit_count, get_edit_count, get_top_events, get_total_eventcount
 from db_conn import get_db_conn
 import pandas as pd
 import streamlit as st
@@ -68,8 +68,7 @@ for row in df.iterrows():
     # Dataset of interest
     # dict format as needed to pass as **kwargs
     dataspec = [
-        # {'wiki':'enwiki', 'title':'2025 New York City mayoral election'},
-        {'wiki':'enwiki', 'title':title},
+        {'wiki':'enwiki', 'title':title, 'timerange_min': datetime.date(2025,11,9), 'timerange_max': datetime.datetime.now()},
     ]
     df = getit(dataspec)
     st.line_chart(df, x='t', y='value', x_label='Date/Time', y_label='Changes / Hour')
