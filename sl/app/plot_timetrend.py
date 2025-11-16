@@ -38,6 +38,7 @@ def worker():
     avail_wikis = get_list_of_wikis()
     selected_wikis = st.multiselect('Choose Wikis', avail_wikis,['enwiki','dewiki'])
     with_bots = st.checkbox('Include changes by "bots"', True)
+    with_ylog = st.checkbox('use vertical log scale', False)
 
     # input sanitization (accept only wikis that we know)
     selected_wikis = [_ for _ in selected_wikis if _ in set(avail_wikis)]
@@ -85,13 +86,27 @@ def worker():
         # r['ts'] = r['date']
         r['ts'] = datetime.datetime(r['date'].year,r['date'].month,r['date'].day) + datetime.timedelta(hours=int(r['hour']))
 
-    df = pd.DataFrame(res_rows)
-    print(df)
-    print(pd_colmap)
-    df = df.rename(columns=pd_colmap)
-    print(df)
-    st.line_chart(df, x='ts', y=selected_wikis, x_label='Date/Time', y_label='Changes / Hour')
 
+    df = pd.DataFrame(res_rows)
+    df = df.rename(columns=pd_colmap)
+    #print(df)
+    # st.line_chart(df, x='ts', y=selected_wikis, x_label='Date/Time', y_label='Changes / Hour')
+
+    # https://matplotlib.org/stable/gallery/color/color_cycle_default.html
+    #import matplotlib.pyplot as plt
+    #prop_cycle = plt.rcParams['axes.prop_cycle']
+    #print(prop_cycle)
+    plt_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+
+    import itertools
+    iter_color = itertools.cycle(plt_colors)
+
+    import plotly.express as px
+    fig = px.line(df, x='ts', y=selected_wikis, log_y=with_ylog) # , color='category', color_discrete_sequence=plt_colors
+    fig.update_layout(xaxis_title='time', yaxis_title='edits/hour', legend=dict(
+        orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1.0
+    ))
+    st.plotly_chart(fig, theme='streamlit')
 
 #####
 #####
