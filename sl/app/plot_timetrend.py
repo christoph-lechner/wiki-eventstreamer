@@ -37,7 +37,7 @@ def worker():
     # user interface
     avail_wikis = get_list_of_wikis()
     selected_wikis = st.multiselect('Select Wikis to plot', avail_wikis,['enwiki','dewiki'])
-    with_bots = st.checkbox('Include changes by "bots"', True)
+    with_bots = st.checkbox('Also count changes by "bots"', True)
     with_ylog = st.checkbox('use vertical log scale', False)
 
     # input sanitization (accept only wikis that we know)
@@ -76,6 +76,7 @@ def worker():
     qstr += "WHERE event_type='edit' "
     # The streamreader rotates the stream dumps no at the full hour -> cut away the final (incomplete) hour
     qstr += " AND ts_event_meta_dt<(SELECT DATE_TRUNC('HOUR',MAX(ts_event_meta_dt)) FROM wiki_change_events_test) "
+    # if requested, exclude edit events by clients identifying as bots (otherwise, ignore this flag)
     if not with_bots:
         qstr += ' AND event_bot=FALSE '
     qstr += " AND event_wiki IN (" +(','.join(n_selected_wikis*['%s']))+ ") "
