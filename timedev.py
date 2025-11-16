@@ -13,7 +13,24 @@ class MyTimer:
     time_stats = []
 
     @classmethod
-    def timeit(self, func):
+    def timeit(self, func=None, *, infotxt=None):
+        # Case 1: called without parentheses
+        # @MyTimer.timeit
+        # def f():
+        #     ...
+        if func:
+            return self._make_wrapper(func, infotxt=None)
+
+        # Case 2: called with parentheses
+        # @MyTimer.timeit(infotxt='Hallo World')
+        # def f():
+        #     ...
+        def decorator(func):
+            return self._make_wrapper(func, infotxt=infotxt)
+        return decorator
+
+    @classmethod
+    def _make_wrapper(self,func,infotxt):
         @wraps(func)
         def wrapper(*args, **kwargs):
             tnow = datetime.datetime.now()
@@ -21,7 +38,7 @@ class MyTimer:
             result = func(*args,**kwargs)
             tend = time.perf_counter()
             print(f'{func.__name__}: {tend-tstart:.6f} seconds')
-            self.time_stats.append({'tstart': tnow, 'func': func.__name__, 'dur': (tend-tstart)})
+            self.time_stats.append({'tstart': tnow, 'func': func.__name__, 'dur': (tend-tstart), 'infotxt':infotxt})
             return result
         return wrapper
 
@@ -42,21 +59,36 @@ def do_something():
     time.sleep(2)
     return
 
-@MyTimer.timeit
+# !must provide name of the argument here!
+@MyTimer.timeit(infotxt='Hallo')
 def do_work():
     # do ... important ... work
     time.sleep(2)
     return
 
-# let's do a few function calls
-do_something()
-do_work()
-do_something()
+# Finally, let's demonstrate that the infotxt passed to the decorator
+# of a sub-function can depend on the argument passed to the function.
+def do_cool_things(arg):
+    @MyTimer.timeit(infotxt=arg)
+    def f():
+        print('... Hello from f ...')
+        time.sleep(1)
+        return
+    f()
 
 
-### process the results ###
-def report(s):
-    print(s)
+if __name__=="__main__":
+    # let's do a few function calls
+    do_something()
+    do_work()
+    do_something()
+    do_cool_things('value1')
+    do_cool_things('value2')
 
-print('Collected time stats: ')
-MyTimer.report1(report)
+
+    ### process the results ###
+    def report(s):
+        print(s)
+
+    print('Collected time stats: ')
+    MyTimer.report1(report)
