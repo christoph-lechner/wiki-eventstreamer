@@ -105,7 +105,43 @@ def worker():
         df = df.rename(columns=pd_colmap)
         return(df)
 
-    df = execquery_notmat()
+    def execquery_mat():
+        if with_bots:
+            use_col = 'count_bot_flagignore'
+        else:
+            use_col = 'count_bot_false'
+        cntr=1
+        def_cntrcols = []
+        query_args = []
+        pd_colmap = {} # for naming colums in pandas DataFrame (for plot preparation)
+        for w in selected_wikis:
+            # NOTE: the actual string values are not inserted here (to exluce any risk for SQL injection)
+            def_cntrcols.append(f'SUM((CASE WHEN event_wiki=%s THEN {use_col} END)) AS c{cntr}')
+            query_args.append(w)
+            pd_colmap[f'c{cntr}'] = w
+            cntr+=1
+
+        qstr = 'SELECT date,hour,'
+        qstr += ','.join(def_cntrcols)
+        qstr += ' FROM wiki_matview_countsedits '
+        qstr += "WHERE event_wiki IN (" +(','.join(n_selected_wikis*['%s']))+ ") "
+        qstr += 'GROUP BY date,hour ORDER BY date,hour;'
+        # print(qstr)
+        cur.execute(qstr, 2*query_args)
+        res_rows = cur.fetchall()
+        for r in res_rows:
+            # r['ts'] = r['date']
+            r['ts'] = datetime.datetime(r['date'].year,r['date'].month,r['date'].day) + datetime.timedelta(hours=int(r['hour']))
+
+        df = pd.DataFrame(res_rows)
+        df = df.rename(columns=pd_colmap)
+        return(df)
+
+    
+    if use_materialized:
+        df = execquery_mat()
+    else:
+        df = execquery_notmat()
     #print(df)
     # st.line_chart(df, x='ts', y=selected_wikis, x_label='Date/Time', y_label='Changes / Hour')
 
