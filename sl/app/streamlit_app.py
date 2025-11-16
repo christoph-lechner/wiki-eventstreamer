@@ -32,14 +32,14 @@ def run() -> None:
                     title="top20",
                     icon=":material/table:",
                 ),
-                st.Page(
-                    dir_path / "plot_hist.py",
-                    title="Edits over time",
-                    icon=":material/table:",
-                ),
+                #st.Page(
+                #    dir_path / "plot_hist.py",
+                #    title="Edits over time",
+                #    icon=":material/table:",
+                #),
                 st.Page(
                     dir_path / "plot_timetrend.py",
-                    title="TimeTrend",
+                    title="Edits: Time Trends",
                     icon=":material/table:",
                 ),
                 st.Page(

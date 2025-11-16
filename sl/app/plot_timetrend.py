@@ -6,19 +6,11 @@ from db_conn import get_db_conn
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="Edits: Time Trends", page_icon=":material/table:")
-
-conn = get_db_conn()
-# https://www.psycopg.org/psycopg3/docs/advanced/rows.html#row-factories
-from psycopg.rows import dict_row
-cur = conn.cursor(row_factory=dict_row)
-
-st.write('# Edits: Time Trends')
-
 use_materialized=True
 
 def worker():
-    @st.cache_data(ttl=600)
+    # caching: not needed when taking data from materialized views
+    # @st.cache_data(ttl=600)
     def get_list_of_wikis():
         if use_materialized:
             cur.execute(
@@ -165,5 +157,19 @@ def worker():
 #####
 #####
 
+st.set_page_config(page_title="Edits: Time Trends", page_icon=":material/table:")
+
+
+conn = get_db_conn()
+# https://www.psycopg.org/psycopg3/docs/advanced/rows.html#row-factories
+from psycopg.rows import dict_row
+cur = conn.cursor(row_factory=dict_row)
+
+st.write('# Edits: Time Trends')
 with st.spinner("Preparing statistics..."):
     worker()
+
+# It is very important to close the DB connection.
+# Otherwise, refreshing the materialized views will not start until streamlit program was terminated. (Symptoms: execution of query takes forever, no postgres CPU load on DB server)
+cur.close()
+conn.close()
