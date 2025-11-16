@@ -15,18 +15,31 @@ cur = conn.cursor(row_factory=dict_row)
 
 st.write('# Edits: Time Trends')
 
+use_materialized=True
+
 def worker():
     @st.cache_data(ttl=600)
     def get_list_of_wikis():
-        cur.execute(
-            """
-            SELECT event_wiki,COUNT(*) AS c
-            FROM wiki_change_events_test
-            WHERE event_type='edit'
-            GROUP BY event_wiki
-            ORDER BY COUNT(*) DESC;
-            """
-        )
+        if use_materialized:
+            cur.execute(
+                """
+                SELECT event_wiki,SUM(count_bot_flagignore) AS c
+                FROM wiki_matview_countsedits
+                GROUP BY event_wiki
+                ORDER BY SUM(count_bot_flagignore) DESC
+                """
+            )
+        else:
+            cur.execute(
+                """
+                SELECT event_wiki,COUNT(*) AS c
+                FROM wiki_change_events_test
+                WHERE event_type='edit'
+                GROUP BY event_wiki
+                ORDER BY COUNT(*) DESC;
+                """
+            )
+
         res_rows = cur.fetchall()
         avail_wikis = []
         for row in res_rows:
@@ -59,38 +72,40 @@ def worker():
     # GROUP BY date,hour
     # ORDER BY date,hour
 
-    cntr=1
-    def_cntrcols = []
-    query_args = []
-    pd_colmap = {} # for naming colums in pandas DataFrame (for plot preparation)
-    for w in selected_wikis:
-        # NOTE: the actual string values are not inserted here (to exluce any risk for SQL injection)
-        def_cntrcols.append(f'SUM((CASE WHEN event_wiki=%s THEN 1 END)) AS c{cntr}')
-        query_args.append(w)
-        pd_colmap[f'c{cntr}'] = w
-        cntr+=1
+    def execquery_notmat():
+        cntr=1
+        def_cntrcols = []
+        query_args = []
+        pd_colmap = {} # for naming colums in pandas DataFrame (for plot preparation)
+        for w in selected_wikis:
+            # NOTE: the actual string values are not inserted here (to exluce any risk for SQL injection)
+            def_cntrcols.append(f'SUM((CASE WHEN event_wiki=%s THEN 1 END)) AS c{cntr}')
+            query_args.append(w)
+            pd_colmap[f'c{cntr}'] = w
+            cntr+=1
 
-    qstr = 'SELECT DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,'
-    qstr += ','.join(def_cntrcols)
-    qstr += ' FROM wiki_change_events_test '
-    qstr += "WHERE event_type='edit' "
-    # The streamreader rotates the stream dumps no at the full hour -> cut away the final (incomplete) hour
-    qstr += " AND ts_event_meta_dt<(SELECT DATE_TRUNC('HOUR',MAX(ts_event_meta_dt)) FROM wiki_change_events_test) "
-    # if requested, exclude edit events by clients identifying as bots (otherwise, ignore this flag)
-    if not with_bots:
-        qstr += ' AND event_bot=FALSE '
-    qstr += " AND event_wiki IN (" +(','.join(n_selected_wikis*['%s']))+ ") "
-    qstr += 'GROUP BY date,hour ORDER BY date,hour;'
+        qstr = 'SELECT DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,'
+        qstr += ','.join(def_cntrcols)
+        qstr += ' FROM wiki_change_events_test '
+        qstr += "WHERE event_type='edit' "
+        # The streamreader rotates the stream dumps no at the full hour -> cut away the final (incomplete) hour
+        qstr += " AND ts_event_meta_dt<(SELECT DATE_TRUNC('HOUR',MAX(ts_event_meta_dt)) FROM wiki_change_events_test) "
+        # if requested, exclude edit events by clients identifying as bots (otherwise, ignore this flag)
+        if not with_bots:
+            qstr += ' AND event_bot=FALSE '
+        qstr += " AND event_wiki IN (" +(','.join(n_selected_wikis*['%s']))+ ") "
+        qstr += 'GROUP BY date,hour ORDER BY date,hour;'
+        cur.execute(qstr, 2*query_args)
+        res_rows = cur.fetchall()
+        for r in res_rows:
+            # r['ts'] = r['date']
+            r['ts'] = datetime.datetime(r['date'].year,r['date'].month,r['date'].day) + datetime.timedelta(hours=int(r['hour']))
 
-    cur.execute(qstr, 2*query_args)
-    res_rows = cur.fetchall()
-    for r in res_rows:
-        # r['ts'] = r['date']
-        r['ts'] = datetime.datetime(r['date'].year,r['date'].month,r['date'].day) + datetime.timedelta(hours=int(r['hour']))
+        df = pd.DataFrame(res_rows)
+        df = df.rename(columns=pd_colmap)
+        return(df)
 
-
-    df = pd.DataFrame(res_rows)
-    df = df.rename(columns=pd_colmap)
+    df = execquery_notmat()
     #print(df)
     # st.line_chart(df, x='ts', y=selected_wikis, x_label='Date/Time', y_label='Changes / Hour')
 
