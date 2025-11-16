@@ -6,7 +6,7 @@ from db_conn import get_db_conn
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="Top20", page_icon=":material/table:")
+st.set_page_config(page_title="Edits: Time Trends", page_icon=":material/table:")
 
 conn = get_db_conn()
 # https://www.psycopg.org/psycopg3/docs/advanced/rows.html#row-factories
@@ -36,7 +36,7 @@ def worker():
 
     # user interface
     avail_wikis = get_list_of_wikis()
-    selected_wikis = st.multiselect('Choose Wikis', avail_wikis,['enwiki','dewiki'])
+    selected_wikis = st.multiselect('Select Wikis to plot', avail_wikis,['enwiki','dewiki'])
     with_bots = st.checkbox('Include changes by "bots"', True)
     with_ylog = st.checkbox('use vertical log scale', False)
 
@@ -74,6 +74,7 @@ def worker():
     qstr += ','.join(def_cntrcols)
     qstr += ' FROM wiki_change_events_test '
     qstr += "WHERE event_type='edit' "
+    # The streamreader rotates the stream dumps no at the full hour -> cut away the final (incomplete) hour
     qstr += " AND ts_event_meta_dt<(SELECT DATE_TRUNC('HOUR',MAX(ts_event_meta_dt)) FROM wiki_change_events_test) "
     if not with_bots:
         qstr += ' AND event_bot=FALSE '
