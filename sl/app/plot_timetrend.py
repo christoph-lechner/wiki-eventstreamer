@@ -176,7 +176,7 @@ def worker():
 
     fig = px.line(df, x='ts', y=selected_wikis, log_y=with_ylog, color_discrete_sequence=list(itertools.islice(iter_color, len(selected_wikis))) )
     fig.update_layout(xaxis_title='time', yaxis_title='edits/hour', legend=dict(
-        orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1.0
+        orientation='h', title_text='wiki', yanchor='bottom', y=1.02, xanchor='right', x=1.0
     ))
     st.plotly_chart(fig, theme='streamlit')
 
