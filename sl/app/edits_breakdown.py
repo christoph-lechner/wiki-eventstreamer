@@ -76,13 +76,21 @@ def worker():
 
     res_rows = cur.fetchall()
     df = pd.DataFrame(res_rows)
-    # Display only the largest wikis contributing to 90% of total edit events
-    df.loc[df['rel_cumsum']>0.90, 'event_wiki'] = 'Other wikis'
-    # df
+    # Display only the largest wikis contributing to a total 95% of edit events
+    df.loc[df['rel_cumsum']>0.95, 'event_wiki'] = 'other wikis'
+    st.write('Only displaying largest wikis contributing to a total of 95 percent of all edit events (all others are indicated as "other wikis")')
 
-    # generate plot, see https://plotly.com/python/pie-charts/ (accessed 2025-11-17)
-    import plotly.express as px
-    fig = px.pie(df, values='rel_sum', names='event_wiki')
+    # FIXME: canary events have event_wiki=None
+    # -> causes issues with treemap
+    # -> On 2025-11-18 fixed import script to discard canary events (thus these will not be an issue in the future)
+    df = df.dropna(subset=['event_wiki'])
+    fig = px.treemap(
+        df,
+        path=["event_wiki"],      # single-level = flat treemap
+        values="rel_sum",
+        color="rel_sum",    # optional
+        color_continuous_scale="Viridis"
+    )
     st.plotly_chart(fig, theme='streamlit')
 
 #####
