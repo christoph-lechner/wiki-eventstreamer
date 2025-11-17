@@ -43,6 +43,11 @@ def run() -> None:
                     icon=":material/table:",
                 ),
                 st.Page(
+                    dir_path / "edits_breakdown.py",
+                    title="Edits: Breakdown",
+                    icon=":material/table:",
+                ),
+                st.Page(
                     dir_path / "db_stat.py",
                     title="database statistics",
                     icon=":material/table:",
