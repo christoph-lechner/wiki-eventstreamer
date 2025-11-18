@@ -19,7 +19,7 @@ def get_totaledit_count(cur, wiki = 'enwiki'):
         SELECT
            DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,
            COUNT(*) AS c
-        FROM wiki_change_events_test
+        FROM wiki_change_events
         WHERE
            event_type='edit' AND event_wiki=%s
         GROUP BY DATE(ts_event_meta_dt), EXTRACT(HOUR FROM ts_event_meta_dt)
@@ -69,7 +69,7 @@ def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976', tim
                 -- MIN(ts_event_meta_dt) AS col_min, MAX(ts_event_meta_dt) AS col_max,
                 -- need start of hour, see https://www.postgresql.org/docs/current/functions-datetime.html
                 DATE_TRUNC('HOUR', MIN(ts_event_meta_dt)) AS col_min_startofhour
-            FROM wiki_change_events_test
+            FROM wiki_change_events
             WHERE
                event_type='edit' AND event_wiki=%s AND event_title=%s
             GROUP BY
@@ -117,27 +117,26 @@ def get_edit_count(cur, wiki = 'enwiki', title = 'UPS Airlines Flight 2976', tim
 ###########################
 
 
+# FIXME: update table name ("_test" no longer correct)
+# add index to db speeds up this query:
+# CREATE INDEX wiki_change_events_test_ts_event_meta_dt_idx ON wiki_change_events_test (ts_event_meta_dt);
 def get_freshness_getoldest_abs(cur):
-    # add index to db speeds up this query:
-    # CREATE INDEX wiki_change_events_test_ts_event_meta_dt_idx ON wiki_change_events_test (ts_event_meta_dt);
     cur.execute(
-        "SELECT MIN(ts_event_meta_dt) AS min_ts FROM wiki_change_events_test;"
+        "SELECT MIN(ts_event_meta_dt) AS min_ts FROM wiki_change_events;"
     )
     res = cur.fetchone()
     return res['min_ts']
 
 def get_freshness_abs(cur):
-    # add index to db speeds up this query:
-    # CREATE INDEX wiki_change_events_test_ts_event_meta_dt_idx ON wiki_change_events_test (ts_event_meta_dt);
     cur.execute(
-        "SELECT MAX(ts_event_meta_dt) AS max_ts FROM wiki_change_events_test;"
+        "SELECT MAX(ts_event_meta_dt) AS max_ts FROM wiki_change_events;"
     )
     res = cur.fetchone()
     return res['max_ts']
 
 def get_freshness_deltat(cur):
     cur.execute(
-        "SELECT (NOW()-MAX(ts_event_meta_dt)) AS freshness FROM wiki_change_events_test;"
+        "SELECT (NOW()-MAX(ts_event_meta_dt)) AS freshness FROM wiki_change_events;"
     )
     res = cur.fetchone()
     # time diff is returned as 'datetime.timedelta'
@@ -146,7 +145,7 @@ def get_freshness_deltat(cur):
 # FIXME: expensive on Google BigQuery
 def get_total_eventcount(cur):
     cur.execute(
-        "SELECT COUNT(*) AS nevents FROM wiki_change_events_test;"
+        "SELECT COUNT(*) AS nevents FROM wiki_change_events;"
     )
     res = cur.fetchone()
     return (res['nevents'])
@@ -163,7 +162,7 @@ def get_top_events(cur, wiki='enwiki', since=None):
         """
         SELECT
            event_title,COUNT(*) AS c
-        FROM wiki_change_events_test
+        FROM wiki_change_events
         WHERE
            ts_event_meta_dt>=%s
            AND event_type='edit' AND event_wiki=%s

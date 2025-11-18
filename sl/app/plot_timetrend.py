@@ -27,7 +27,7 @@ def worker():
             cur.execute(
                 """
                 SELECT event_wiki,COUNT(*) AS c
-                FROM wiki_change_events_test
+                FROM wiki_change_events
                 WHERE event_type='edit'
                 GROUP BY event_wiki
                 ORDER BY COUNT(*) DESC;
@@ -77,7 +77,7 @@ def worker():
     #   SUM((CASE WHEN event_wiki='wikidatawiki' THEN 1 END)) AS c2,
     #   SUM((CASE WHEN event_wiki='enwiki' THEN 1 END)) AS c3,
     #   SUM((CASE WHEN event_wiki='dewiki' THEN 1 END)) AS c4
-    # FROM wiki_change_events_test
+    # FROM wiki_change_events
     # WHERE event_type='edit' AND event_wiki IN ('commonswiki','wikidatawiki','enwiki','dewiki')
     # GROUP BY date,hour
     # ORDER BY date,hour
@@ -97,10 +97,10 @@ def worker():
 
         qstr = 'SELECT DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,'
         qstr += ','.join(def_cntrcols)
-        qstr += ' FROM wiki_change_events_test '
+        qstr += ' FROM wiki_change_events '
         qstr += "WHERE event_type='edit' "
         # The streamreader rotates the stream dumps no at the full hour -> cut away the final (incomplete) hour
-        qstr += " AND ts_event_meta_dt<(SELECT DATE_TRUNC('HOUR',MAX(ts_event_meta_dt)) FROM wiki_change_events_test) "
+        qstr += " AND ts_event_meta_dt<(SELECT DATE_TRUNC('HOUR',MAX(ts_event_meta_dt)) FROM wiki_change_events) "
         # if requested, exclude edit events by clients identifying as bots (otherwise, ignore this flag)
         if not with_bots:
             qstr += ' AND event_bot=FALSE '
