@@ -6,7 +6,7 @@ from db_conn import get_db_conn
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-import itertools
+import hashlib
 
 def worker():
     def query_withbots():
@@ -84,6 +84,26 @@ def worker():
     # -> causes issues with treemap
     # -> On 2025-11-18 fixed import script to discard canary events (thus these will not be an issue in the future)
     df = df.dropna(subset=['event_wiki'])
+
+    # idea 2025-11-18: color does not depend on order in table, just on event_wiki (then for instance, the 'enwiki' will always have the same color, which is great for comparisons)
+    # does not work yet, because I get
+    # AttributeError: 'str' object has no attribute 'copy'
+    # when calling px.treemap
+    palette = px.colors.qualitative.Plotly # or any other palette
+    def xlat_str_to_color(s_in):
+        h = int( hashlib.sha256(s_in.encode()).hexdigest(),16 )
+        # return '#ff0000'
+        return palette[h % len(palette)]
+    df['color'] = df['event_wiki'].apply(xlat_str_to_color)
+
+    # does not work, to be debugged
+    #fig = px.treemap(
+    #    df,
+    #    path=["event_wiki"],      # single-level = flat treemap
+    #    values="rel_sum",
+    #    color="color",
+    #    color_discrete_map='identity'
+    #)
     fig = px.treemap(
         df,
         path=["event_wiki"],      # single-level = flat treemap
