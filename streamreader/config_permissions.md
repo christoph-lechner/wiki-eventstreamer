@@ -1,4 +1,5 @@
-2025-Nov-11
+# Configuration of User Accounts, Public Key Login
+Notes taken 2025-Nov-11.
 
 ## Setting up user accounts
 ```
@@ -56,9 +57,14 @@ cl@ubuntu:~$ sudo adduser dataxfer wikidata
 ## Setting up SSH login with public key auth
 This will be needed for automatic transfers of the stored data.
 
+Here `clsrv` is the hostname of the machine in the internal network and `ubuntu` is the hostname of the server running the stream reader software.
+
 ### ONLY IF NEEDED: prepare public key
+This may be needed on the machine which is going to download the files via ssh/rsync, i.e. the machine in the internal network.
+Do not run this if you already have the keys!
+
 ```
-cl@clsrv:~$ ssh-keygen
+cl@clsrv:~$ XX_ssh-keygen # remove the leading "XX_" if you are sure that you wish to generate the keys
 Generating public/private ed25519 key pair.
 Enter file in which to save the key (/home/cl/.ssh/id_ed25519): 
 Enter passphrase (empty for no passphrase): 
