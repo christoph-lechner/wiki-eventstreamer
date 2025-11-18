@@ -1,5 +1,7 @@
 CL, 2025-11-16
 
+Note 2025-11-19: Table `wiki_change_events_test` was renamed to `wiki_change_events` and the VIEWs were recreated with the updated name.
+
 ## First Query
 ```
 SELECT DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour,event_wiki,
