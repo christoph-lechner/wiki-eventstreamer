@@ -153,7 +153,7 @@ FROM {stg_table_load};
 )
 rowcount_initial = cur.rowcount # no deduplication here, so it should correspond to number of loaded rows
 
-print('deduplicate staged rows bashed on hashes (sometimes the same event is sent multiple times) ...')
+print('deduplicate staged rows bashed on hashes (sometimes the same event is sent multiple times) + drop canary events ...')
 cur.execute(
 f"""
 -- de-duplicate based on MD5 hash
@@ -163,7 +163,10 @@ WITH q AS (
 )
 SELECT
     _h,ts_event_meta_dt,event_meta_dt,event_meta_id,event_meta_domain,event_id,event_type,event_wiki,event_user,event_bot,event_title
-FROM q WHERE _rn=1;
+FROM q WHERE
+	_rn=1
+	-- discard 'canary' events (see https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service)
+	AND event_meta_domain<>'canary';
 """
 )
 rowcount_hash_dedupl = cur.rowcount
