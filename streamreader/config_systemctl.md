@@ -1,3 +1,6 @@
+# Setup of systemctl Service
+Prerequisite: User name for running the service was already created. The user name is specified in the `.service` file with parameter `User` in the `[Service]` section.
+
 ## Preparations of Python Environment
 ```
 dataacq@demosrv:~/wiki/wiki-eventstreamer/streamreader$ python3 -m venv /home/dataacq/venv_wikistreamreader_prod/
@@ -12,9 +15,6 @@ OS: Ubuntu Server 22.04 LTS
 
 Copy the file `wikistreamreader.service` to `/etc/systemd/system/`,
 then enable the service
-```
-cl@demosrv:~$ sudo systemctl enable wikistreamreader
-```
 ```
 cl@ubuntu:~$ sudo systemctl enable wikistreamreader
 Created symlink /etc/systemd/system/multi-user.target.wants/wikistreamreader.service → /etc/systemd/system/wikistreamreader.service.

@@ -7,7 +7,7 @@ Wikipedia is one of the largest collaborative knowledge projects in history. Eve
 * y
 * z
 
-The information needed to realize these applications is provided by [Wikimedia](https://www.wikimedia.org/), the organization operating the Wikipedia websites, as [data stream](https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service). Note that for privacy reasons, no stream with page views is available, however, cumulated access data (on an per-hour basis) are available.
+The information needed to realize these applications is provided by [Wikimedia](https://www.wikimedia.org/), the organization operating the Wikipedia websites, as [data stream](https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service). Note that for privacy reasons, no stream with page views is available, however, cumulated access data (on an per-hour basis) are available [here](https://dumps.wikimedia.org/other/pageviews/2025/2025-11/).
 
 Some selected key facts about the used data stream:
 * just the meta data (not the changes themselves),
