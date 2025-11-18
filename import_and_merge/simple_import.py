@@ -24,7 +24,7 @@ CREATE TABLE wiki_change_events(
 );
 """
 
-data_table = 'wiki_change_events_test';
+data_table = 'wiki_change_events';
 stg_table_prefix = 'stg_tmp';
 do_debug = False
 
