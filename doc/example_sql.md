@@ -1,15 +1,16 @@
 # Example SQL Queries
-## top wikis
+## Top Wikis
+
 ```
 SELECT event_wiki,COUNT(*) FROM wiki_change_events GROUP BY event_wiki ORDER BY COUNT(*) DESC LIMIT 10;
 ```
 
-## types of events
+## Types of Events
 ```
 SELECT event_type,COUNT(*) FROM wiki_change_events GROUP BY event_type ORDER BY COUNT(*) DESC;
 ```
 
-## temporal edit distribution for dewiki
+## Temporal Edit Distribution for 'dewiki'
 *Note:* In the code compiling the data for the plots, a more complicated query is used that fill the time gaps (hours without any edits) with zeros. See `db_query.py`.
 ```
 SELECT
@@ -24,7 +25,7 @@ ORDER BY
    DATE(ts_event_meta_dt),EXTRACT(HOUR FROM ts_event_meta_dt);
 ```
 
-## top pages
+## Top Pages
 ```
 SELECT
    event_title,COUNT(*)

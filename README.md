@@ -17,7 +17,7 @@ Some selected key facts about the used data stream:
 The received data is stored in gzip-compressed files (suitable for long-term archiving) and is loaded into an SQL database in hourly batches. There the data is available for analysis.
 
 ## Structure of the System
-![Layout](doc/schematic.png)
+![Layout](doc/img/schematic.png)
 
 To ensure reliable operation of the data collection programs, they are running as dedicated user accounts (configured with log in disabled). The data files written by these programs are read-only accessible to selected users on the machines, in particular for the user account used to run the database loading process.
 
