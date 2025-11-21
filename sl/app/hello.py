@@ -5,6 +5,7 @@ st.title("Welcome to the Wiki Edits Analysis Dashboard")
 st.write(
     """
     **👈 To explore Wiki Edits, select one panel from the sidebar**
+
     Available panels:
     * [Time Trend](/plot_timetrend)
     * [Breakdown](/edits_breakdown)
