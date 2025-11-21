@@ -31,3 +31,11 @@ CREATE TABLE wiki_change_events_test_20251111_otherwikis
 	
 CREATE INDEX wiki_change_events_test_20251111_ts_event_meta_dt_idx ON wiki_change_events_test (ts_event_meta_dt);
 CREATE INDEX wiki_change_events_test_20251111_event_title ON wiki_change_events_test (event_title);
+
+CREATE TABLE wiki_loaderperfdata(
+	tstart timestamp with time zone,
+	dur float,
+	func text,
+	infotxt text
+)
+
