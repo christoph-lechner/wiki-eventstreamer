@@ -23,7 +23,7 @@ To ensure reliable operation of the data collection programs, they are running a
 
 ## Details
 For many components of the system there are resources with more details:
-* [Python program] (streamreader/) to store the wikimedia event stream. In my case this program is running on a separate machine (and there using a dedicated user account).
+* [Python program](streamreader/) to store the wikimedia event stream. In my case this program is running on a separate machine (and there using a dedicated user account).
 * For downloading the stored information from the wikimedia event stream:
   * Python Program for transferring the files can be found [here](https://github.com/christoph-lechner/wiki-eventstreamer-transfer)
   * Apache Airflow DAGs for importing and merging the data in the files into the PostgresQL database are [here](import_and_merge/airflow_dags/)
