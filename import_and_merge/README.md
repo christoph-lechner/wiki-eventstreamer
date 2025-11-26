@@ -12,7 +12,7 @@ a few Airflow DAGs are used to load the data in the data table.
 
 Once the most recent files with stream dumps have been downloading to the local data directory, the Airflow DAGs are triggered via a REST API request (internally this is a HTTP POST request). This API request also "crosses" between different Linux users, since the cronjob for data downloads runs with a different user id (this user is also owner of the data files).
 
-### Configuration Detail
+### cronjob Configuration Detail
 The cronjob for data transfer is currently configured to run at minute 10 of every hour as follows:
 ```
 wikidata@clsrv:~$ crontab -l
@@ -22,7 +22,13 @@ wikidata@clsrv:~$ crontab -l
 ```
 The `flock` command ([manpage](https://man7.org/linux/man-pages/man1/flock.1.html)) ensures that at most one instance of the transfer program is running. As the transfer process has a normal runtime of about 1 minute, this is only a protection in the case of malfunction.
 
-### misc.
-Screenshot taken in the browser-based Airflow user interface, showing the two DAGs set up for this process:
+### Airflow DAGs
+The following picture is a screenshot taken in the browser-based Airflow user interface, showing the two DAGs set up for this process:
 
 ![screenshot](./airflowUI.png)
+
+The DAG `load_streamdump` reads the file containing the stream dump; loads it into a temporary table in the postgreSQL database; performs necessary type transformations; performs deduplications (in very rare occasions the event stream contains the same event multiple times); and 
+
+The DAG `load_streamdump_finalize` triggers the update process for two 'materialized views' (postgreSQL-specific extension).
+
+In the moment these operations are performed using Python code. Adding a dedicated tool such as [dbt](https://getdbt.com/) for these operations seems not to be justified because of the additional operational and maintenance complexity it would introduce.
