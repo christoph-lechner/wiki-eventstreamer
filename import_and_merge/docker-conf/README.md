@@ -10,4 +10,28 @@ For the general preparation procedure, follow the steps described [here](https:/
 
 The DAGs developed for this project can be found in this repository.
 
-To trigger the DAG runs via the REST API, a username has to be created in Airflow. -> document this.
+## Preparations for Triggering via REST API
+To trigger the DAG runs via the REST API, a username has to be created in Airflow. With the containers up and running, I executed the following command (in the directory where the `docker-compose.yaml` file is situated) to create the account `cltest` (here done with Admin priviledges, this should be adjusted accordingly):
+```
+docker compose exec airflow-scheduler airflow users create --username cltest --firstname C --lastname L --role Admin -e "cl@cl"
+```
+
+### Testing It
+Following https://airflow.apache.org/docs/apache-airflow/stable/security/api.html
+
+Request:
+```
+curl -X POST http://localhost:9080/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "cltest",
+    "password": "[...]"
+  }'
+```
+If everything is working, the response has the structure:
+```
+{"access_token":"[...]"}
+```
+We have obtained the JWT token to be included in requests.
+
+After configuration of the `wiki-eventstreamer-transfer` software, the program `./obtain_JWT.py` should be used to check that the JWT token can be obtained.

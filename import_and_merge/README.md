@@ -2,7 +2,7 @@
 ## List of Resources
 This directory contains the following resources:
 * Version 1 (now historic) of the import-and-merge scripts
-* [The DAGs for Apache Airflow version 3.1.3](airflow_dags/). They were developed with the Airflow developer version based on a single `docker-compose.yaml` file. Here, these are to be placed into the `dags/` directory. At least this configuration does not support the import from the modules when they are in a subdirectory of `dags/`.
+* [The DAGs for Apache Airflow version 3.1.3](airflow_dags/). They were developed with the Airflow version 3.1.3 executed using a [modified version](docker-conf/) of a `docker-compose.yaml` file provided by the Airflow project for learning and exploration. In this setup, these file are to be placed into the `dags/` directory (at least this configuration does not support the import from Python modules when they are in a subdirectory of `dags/`).
 
 ## Implementation with Airflow
 In combination with the transfer script running as traditional cronjob,
