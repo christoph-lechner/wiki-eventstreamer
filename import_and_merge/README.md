@@ -21,3 +21,8 @@ wikidata@clsrv:~$ crontab -l
 10 * * * * /usr/bin/flock -n /tmp/wiki-transfer-cron.lockfile /home/wikidata/prod_transfer/wiki-eventstreamer-transfer/run_cron.sh
 ```
 The `flock` command ([manpage](https://man7.org/linux/man-pages/man1/flock.1.html)) ensures that at most one instance of the transfer program is running. As the transfer process has a normal runtime of about 1 minute, this is only a protection in the case of malfunction.
+
+### misc.
+Screenshot taken in the browser-based Airflow user interface, showing the two DAGs set up for this process:
+
+![screenshot](./airflowUI.png)

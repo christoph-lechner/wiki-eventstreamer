@@ -19,7 +19,7 @@ docker compose exec airflow-scheduler airflow users create --username cltest --f
 ### Testing It
 Following https://airflow.apache.org/docs/apache-airflow/stable/security/api.html
 
-Request:
+Request (port 8080 in the original `docker-compose.yaml` was changed to 9080):
 ```
 curl -X POST http://localhost:9080/auth/token \
   -H "Content-Type: application/json" \
@@ -32,6 +32,6 @@ If everything is working, the response has the structure:
 ```
 {"access_token":"[...]"}
 ```
-We have obtained the JWT token to be included in requests.
+We have obtained the JWT token to be included in requests. As the token has only a limited life-time, in practice it has to be obtained automatically.
 
 After configuration of the `wiki-eventstreamer-transfer` software, the program `./obtain_JWT.py` should be used to check that the JWT token can be obtained.
