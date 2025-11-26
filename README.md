@@ -19,8 +19,6 @@ The received data is stored in gzip-compressed files (suitable for long-term arc
 ## Structure of the System
 ![Layout](doc/img/schematic.png)
 
-To ensure reliable operation of the data collection programs, they are running as dedicated user accounts (configured with log in disabled). The data files written by these programs are read-only accessible to selected users on the machines, in particular for the user account used to run the database loading process.
-
 ## Details
 For many components of the system there are resources with more details:
 * [Python program](streamreader/) to store the wikimedia event stream. In my case this program is running on a separate machine (and there using a dedicated user account).
@@ -32,3 +30,6 @@ For many components of the system there are resources with more details:
   * To make this Streamlit-based plotting solution available via HTTPS, a reverse proxy using Apache2 was set up. It also does user authentication. For a few configuration details, see [here](doc/apache2_revproxy/)
   * Several Python programs using `matplotlib.pyplot` are available in [misc/](misc/)
   * The solution to monitor the freshness of the data in the table is located in a [dedicated repository](https://github.com/christoph-lechner/wiki-eventstreamer-qa-web)
+
+
+To ensure reliable operation of the data collection programs, they are executed using dedicated user accounts (configured with log in disabled). The data files written by these programs are read-only accessible to selected users on the machines, in particular for the user account used to run the database loading process (see [here](doc/accounts.md) for more information).
