@@ -12,7 +12,7 @@ The information needed to realize these applications is provided by [Wikimedia](
 Some selected key facts about the used data stream:
 * just the meta data (not the changes themselves),
 * [JSON](https://en.wikipedia.org/wiki/JSON) format, 
-* average event rate of the stream is about 35 events/s, with burst rates being much higher.
+* average event rate of the stream is about 35 events/s (in Nov 2025), with burst rates being much higher.
 
 The received data is stored in gzip-compressed files (suitable for long-term archiving) and is loaded into an SQL database in hourly batches. There the data is available for analysis.
 
@@ -31,3 +31,4 @@ For many components of the system there are resources with more details:
   * Streamlit-based plotting solution can be found [here](sl/)
   * To make this Streamlit-based plotting solution available via HTTPS, a reverse proxy using Apache2 was set up. It also does user authentication. For a few configuration details, see [here](doc/apache2_revproxy/)
   * Several Python programs using `matplotlib.pyplot` are available in [misc/](misc/)
+  * The solution to monitor the freshness of the data in the table is located in a [dedicated repository](https://github.com/christoph-lechner/wiki-eventstreamer-qa-web)

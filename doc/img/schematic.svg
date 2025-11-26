@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="185mm"
+   width="190mm"
    height="75mm"
-   viewBox="0 0 185 75"
+   viewBox="0 0 190 75"
    version="1.1"
    id="svg5"
    sodipodi:docname="schematic.svg"
@@ -24,15 +24,16 @@
      inkscape:document-units="mm"
      showgrid="true"
      inkscape:snap-text-baseline="true"
-     inkscape:zoom="1.2188472"
-     inkscape:cx="317.92336"
-     inkscape:cy="108.29905"
+     inkscape:zoom="2.4376944"
+     inkscape:cx="443.65692"
+     inkscape:cy="116.91375"
      inkscape:window-width="2560"
      inkscape:window-height="1403"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1">
+     inkscape:current-layer="layer1"
+     inkscape:snap-object-midpoints="true">
     <inkscape:grid
        type="xygrid"
        id="grid824"
@@ -84,6 +85,34 @@
          d="M 0,0 5,-5 -12.5,0 5,5 Z"
          id="path1262-3" />
     </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lstart-3"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.8,0,0,0.8,10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path1259-6" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-7"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path1262-5" />
+    </marker>
   </defs>
   <g
      inkscape:label="Layer 1"
@@ -91,7 +120,7 @@
      id="layer1">
     <path
        style="fill:none;stroke:#808080;stroke-width:0.264583;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:1.05833, 1.05833;stroke-dashoffset:0;stroke-opacity:1"
-       d="M 50,-5 V 69.999997"
+       d="M 60,-5 V 69.999997"
        id="path939" />
     <rect
        style="fill:none;stroke:#000000;stroke-width:0.3"
@@ -157,7 +186,7 @@
          sodipodi:role="line"
          style="font-size:2.82222px;text-align:center;text-anchor:middle;stroke-width:0.264583"
          x="85"
-         y="62.527779"
+         y="62.527775"
          id="tspan7100">stream dumps</tspan></text>
     <g
        id="g13717"
@@ -381,29 +410,57 @@
          id="tspan68850">streamlit (+password auth)</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart);marker-end:url(#Arrow1Lend)"
-       d="M 46.999998,14.999999 H 170 V 33"
-       id="path52618" />
+       d="m 47,17 123,0 0,16"
+       id="path52618"
+       sodipodi:nodetypes="ccc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart-3);marker-end:url(#Arrow1Lend-7)"
+       d="m 47,13 141,0 0,47.999999 h -7"
+       id="path52618-3"
+       sodipodi:nodetypes="cccc" />
     <text
        xml:space="preserve"
        style="font-size:2.82222px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
-       x="45"
+       x="55"
        y="5"
        id="text53785"><tspan
          sodipodi:role="line"
          id="tspan53783"
          style="font-size:2.82222px;stroke-width:0.264583"
-         x="45"
+         x="55"
          y="5">Firewall</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:2.82222px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
-       x="105"
-       y="13.999998"
+       x="106"
+       y="9"
        id="text64320"><tspan
          sodipodi:role="line"
          id="tspan64318"
          style="font-size:2.82222px;stroke-width:0.264583"
-         x="105"
-         y="13.999998">tunnel</tspan></text>
+         x="106"
+         y="9">SSH tunnel</tspan></text>
+    <ellipse
+       style="fill:none;stroke:#b3b3b3;stroke-width:0.264583;stroke-linecap:round;stroke-dasharray:1.05833, 1.05833"
+       id="path1812"
+       cx="55"
+       cy="15"
+       rx="1.9999999"
+       ry="5" />
+    <ellipse
+       style="fill:none;stroke:#b3b3b3;stroke-width:0.264583;stroke-linecap:round;stroke-dasharray:1.05833, 1.05833"
+       id="path1812-5"
+       cx="165"
+       cy="15"
+       rx="1.9999999"
+       ry="5" />
+    <path
+       style="fill:none;stroke:#b3b3b3;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 54.999998,9.9999997 H 165"
+       id="path1990" />
+    <path
+       style="fill:none;stroke:#b3b3b3;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 165,19.999999 H 54.999998"
+       id="path1992" />
   </g>
 </svg>

@@ -1,30 +1,9 @@
 # Streamlit App
-## Introduction
+This directory contains a simple [streamlit](https://streamlit.io/) application generating interactive plots. The Python source code behind the application can be found in the `app/` subdirectory.
 
-The Python source code behind the application can be found in the `app/` subdirectory.
+The data indicated in the plots is retrieved from the postgreSQL database according to the user's input.
 
-## Collection oif Selected Docker commands
-To build the image, run in this directory:
-```
-docker build -t streamlit .
-```
+## Example Plots
+![edits: time trends](img/screenshot_tt_01.png)
 
-To list the images on your computer, run:
-```
-docker images
-```
-
-To run the image just produced, run (we map the directory `app` in the container as `/app`):
-```
-docker run -it -p 8501:8501 -v "./app:/app" streamlit
-```
-
-Location of streamlit hello app:
-```
-/home/cl/venv/lib/python3.10/site-packages/streamlit/hello/
-```
-
-Copy the files in this directory to the `app` sub-directory and run streamlit Docker image. They you can play around with the demo.
-
-### Online Resources
-* [https://docker-curriculum.com/](https://docker-curriculum.com/)
+![breakdown of edits](img/screenshot_wikibreakdown.png)
