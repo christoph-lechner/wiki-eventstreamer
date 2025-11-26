@@ -31,3 +31,4 @@ For many components of the system there are resources with more details:
   * Streamlit-based plotting solution can be found [here](sl/)
   * To make this Streamlit-based plotting solution available via HTTPS, a reverse proxy using Apache2 was set up. It also does user authentication. For a few configuration details, see [here](doc/apache2_revproxy/)
   * Several Python programs using `matplotlib.pyplot` are available in [misc/](misc/)
+  * The solution to monitor the freshness of the data in the table is located in a [dedicated repository](https://github.com/christoph-lechner/wiki-eventstreamer-qa-web)
