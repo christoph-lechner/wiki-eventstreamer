@@ -8,7 +8,7 @@ It is based on the file from the Airflow documentation, with a few changes to ad
 ## Further preparations
 For the general preparation procedure, follow the steps described [here](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html).
 
-The DAGs developed for this project can be found in this repository.
+The DAGs developed for this project can be found [elsewhere](../airflow_dags/) this repository.
 
 ## Preparations for Triggering via REST API
 To trigger the DAG runs via the REST API, a username has to be created in Airflow. With the containers up and running, I executed the following command (in the directory where the `docker-compose.yaml` file is situated) to create the account `cltest` (here done with Admin priviledges, this should be adjusted accordingly):
