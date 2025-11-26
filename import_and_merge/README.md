@@ -27,7 +27,7 @@ The following picture is a screenshot taken in the browser-based Airflow user in
 
 ![screenshot](./airflowUI.png)
 
-The DAG `load_streamdump` reads the file containing the stream dump; loads it into a temporary table in the postgreSQL database; performs necessary type transformations; performs deduplications (in very rare occasions the event stream contains the same event multiple times); and 
+The DAG `load_streamdump` reads the file containing the stream dump; loads it into a temporary table in the postgreSQL database; performs necessary type transformations; performs deduplications (in very rare occasions the event stream contains the same event multiple times); and merges the data into the data table (using the SQL `MERGE` command).
 
 The DAG `load_streamdump_finalize` triggers the update process for two 'materialized views' (postgreSQL-specific extension).
 

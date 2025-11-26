@@ -5,4 +5,4 @@ For running the various components of the data pipeline, several users were crea
 | dataxfer | | user for source side of data transfers | `streamreader/config_permissions.md` |
 | | wikidata | user running jobs to transfer stream dumps, owner of stream dump files (read-only for anybody else on the system) | |
 | | wikiproj | user performing database loading | |
-| | some local user | user running streamlit app (only DB access is needed) | |
+| | different local user | user running streamlit app (only read-only DB access is needed) | |
