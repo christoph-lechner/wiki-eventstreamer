@@ -1,25 +1,28 @@
-## Running it
-Command line syntax:
+# README
+## List of Resources
+This directory contains the following resources:
+* Version 1 (now historic) of the import-and-merge scripts
+* [The DAGs for Apache Airflow version 3.1.3](airflow_dags/). They were developed with the Airflow version 3.1.3 executed using a [modified version](docker-conf/) of a `docker-compose.yaml` file provided by the Airflow project for learning and exploration. In this setup, these file are to be placed into the `dags/` directory (at least this configuration does not support the import from Python modules when they are in a subdirectory of `dags/`).
+
+## Implementation with Airflow
+In combination with the transfer script running as traditional cronjob,
+a few Airflow DAGs are used to load the data in the data table.
+
+![graph](../doc/img/jobgraph.png)
+
+Once the most recent files with stream dumps have been downloading to the local data directory, the Airflow DAGs are triggered via a REST API request (internally this is a HTTP POST request). This API request also "crosses" between different Linux users, since the cronjob for data downloads runs with a different user id (this user is also owner of the data files).
+
+### Configuration Detail
+The cronjob for data transfer is currently configured to run at minute 10 of every hour as follows:
 ```
-simple_import.py [-z] filename
+wikidata@clsrv:~$ crontab -l
+[..]
+
+10 * * * * /usr/bin/flock -n /tmp/wiki-transfer-cron.lockfile /home/wikidata/prod_transfer/wiki-eventstreamer-transfer/run_cron.sh
 ```
-The file can be gzip-compressed, then the `-z` switch has to be present.
+The `flock` command ([manpage](https://man7.org/linux/man-pages/man1/flock.1.html)) ensures that at most one instance of the transfer program is running. As the transfer process has a normal runtime of about 1 minute, this is only a protection in the case of malfunction.
 
-## Description
-The script performs the following tasks:
-* Load event data in JSON format from file (one line per event) 
-* Insert data into temporary table
+### misc.
+Screenshot taken in the browser-based Airflow user interface, showing the two DAGs set up for this process:
 
-Next, transformative steps are carried out:
-* Generate a MD5 hash containing the following fields (helps to avoid loading data we already have):
-  * metadata event id (Note that according to the schema, this field is not required to exist. But typically it is present and it may help to have it included as there can be multiple events with same `request_id` but different ids)
-  * metadata event timestamp (is required to be present according to the schema)
-  * user name (not required to be present)
-  * event ID (not required to be present)
-* The timestamp was imported as string. It is converted into the appropriate SQL type.
-
-Then we deduplicate the events loaded from the file based on the MD5 hash we have just created. This is needed as sometimes the identical event is sent multiple times.
-
-Finally, a `MERGE` query is executed. The criterion for rows to be skipped is that their MD5 hash is already present in the destination table.
-
-All these operations are carried out in a single transaction, so should execution of the script fail, the database is not modified.
+![screenshot](./airflowUI.png)

@@ -12,7 +12,7 @@ The information needed to realize these applications is provided by [Wikimedia](
 Some selected key facts about the used data stream:
 * just the meta data (not the changes themselves),
 * [JSON](https://en.wikipedia.org/wiki/JSON) format, 
-* average event rate of the stream is XXX events/s, with burst rates being much higher.
+* average event rate of the stream is about 35 events/s, with burst rates being much higher.
 
 The received data is stored in gzip-compressed files (suitable for long-term archiving) and is loaded into an SQL database in hourly batches. There the data is available for analysis.
 
@@ -22,9 +22,12 @@ The received data is stored in gzip-compressed files (suitable for long-term arc
 To ensure reliable operation of the data collection programs, they are running as dedicated user accounts (configured with log in disabled). The data files written by these programs are read-only accessible to selected users on the machines, in particular for the user account used to run the database loading process.
 
 ## Details
-* [Python program to store the wikimedia event stream](streamreader/)
-* Python program to [import and merge](import_and_merge/) the files written by the streamreader into the SQL database
-* To visualize the information contained in the database
+For many components of the system there are resources with more details:
+* [Python program](streamreader/) to store the wikimedia event stream. In my case this program is running on a separate machine (and there using a dedicated user account).
+* For downloading the stored information from the wikimedia event stream:
+  * Python Program for transferring the files can be found [here](https://github.com/christoph-lechner/wiki-eventstreamer-transfer)
+  * Apache Airflow DAGs for importing and merging the data in the files into the PostgresQL database are [here](import_and_merge/airflow_dags/)
+* To visualize (or otherwise process) the information contained in the database
   * Streamlit-based plotting solution can be found [here](sl/)
   * To make this Streamlit-based plotting solution available via HTTPS, a reverse proxy using Apache2 was set up. It also does user authentication. For a few configuration details, see [here](doc/apache2_revproxy/)
   * Several Python programs using `matplotlib.pyplot` are available in [misc/](misc/)
