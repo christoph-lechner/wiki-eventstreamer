@@ -13,6 +13,36 @@ SELECT event_wiki,COUNT(*) FROM wiki_change_events GROUP BY event_wiki ORDER BY 
 SELECT event_type,COUNT(*) FROM wiki_change_events GROUP BY event_type ORDER BY COUNT(*) DESC;
 ```
 
+## Event Rates
+Note: these queries count all types of events, not just edits.
+### Hours with Highest Number of Events
+```
+SELECT
+    DATE(ts_event_meta_dt) AS date, EXTRACT(HOUR FROM ts_event_meta_dt) AS hour, COUNT(*) AS c
+FROM wiki_change_events
+GROUP BY
+    DATE(ts_event_meta_dt), EXTRACT(HOUR FROM ts_event_meta_dt)
+ORDER BY
+    COUNT(*) DESC
+LIMIT 10;
+```
+
+### Days with Highest Number of Events
+Here we also count just the "edit" events (these are approx. 50% of all events in the database).
+```
+WITH q AS (
+    SELECT
+        DATE(ts_event_meta_dt) AS date,
+        COUNT(*)/86400.0 AS total_per_sec,
+        SUM ( CASE WHEN event_type='edit' THEN 1 END )/86400.0 AS edits_per_sec
+    FROM wiki_change_events
+    GROUP BY
+        DATE(ts_event_meta_dt)
+)
+SELECT * FROM q ORDER BY total_per_sec DESC;
+```
+The median event rate is about 35/second (computed over the day).
+
 ## Temporal Edit Distribution for 'dewiki'
 *Note:* The code generating the data presented in the Streamlit user interfaces uses a more complicated query. The result of this query is stored as materialized view.
 ```

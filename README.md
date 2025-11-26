@@ -12,7 +12,7 @@ The information needed to realize these applications is provided by [Wikimedia](
 Some selected key facts about the used data stream:
 * just the meta data (not the changes themselves),
 * [JSON](https://en.wikipedia.org/wiki/JSON) format, 
-* average event rate of the stream is XXX events/s, with burst rates being much higher.
+* average event rate of the stream is about 35 events/s, with burst rates being much higher.
 
 The received data is stored in gzip-compressed files (suitable for long-term archiving) and is loaded into an SQL database in hourly batches. There the data is available for analysis.
 
