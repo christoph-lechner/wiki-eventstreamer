@@ -12,6 +12,7 @@ import datetime
 import gzip
 import signal
 from threading import Event
+import argparse
 
 cfg = {
     # Download of historical data (WARNING: can generate lots of data).
@@ -28,6 +29,16 @@ cfg = {
     # output directory (absolute paths preferrable)
     'output_directory':'/srv/wikiproj/streamdata_in',
 }
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--outdir', type=str, help='output directory')
+args = parser.parse_args()
+
+if args.outdir:
+    cfg['output_directory'] = args.outdir
+
+# print(cfg)
+# sys.exit()
 
 #####
 
