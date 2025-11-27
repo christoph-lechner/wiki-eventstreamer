@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ### First test: Check that streamreader reacts to SIGTERM ###
-def test_honors_SIGTERM():
+def test_honors_SIGTERM(capsys, tmp_path):
     def send_SIGTERM(pid, ignore_process_lookup_error=True):
         time.sleep(5)
         try:
@@ -21,10 +21,11 @@ def test_honors_SIGTERM():
                 raise e
 
     test_dir = Path(__file__).parent
-    path_outdir = test_dir / 'scratch_output_dir1/'
     path_sr =     test_dir / 'wikistreamreader.py'
+    # path_outdir = test_dir / 'scratch_output_dir1/'
+    path_outdir = tmp_path
 
-    os.mkdir(path_outdir)
+    # os.mkdir(path_outdir)
     p = subprocess.Popen(
         # useful for tests: sleep gives return code -15 (in Python) if SIGTERM is sent
         # ['/bin/sleep', '100'],
@@ -40,6 +41,10 @@ def test_honors_SIGTERM():
     # wait for process to finish
     p.wait()
     t.join()
+
+    with capsys.disabled():
+        print(f'\n*** contents of output directory {str(path_outdir)} ***')
+        subprocess.run(['/bin/ls', '-ltr', path_outdir])
 
     rc = p.returncode
     print(f'exit code was {rc}')
