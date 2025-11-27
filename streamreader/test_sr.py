@@ -21,11 +21,14 @@ def test_honors_SIGTERM():
                 raise e
 
     test_dir = Path(__file__).parent
-    path_sr = test_dir / 'wikistreamreader.py'
+    path_outdir = test_dir / 'scratch_output_dir1/'
+    path_sr =     test_dir / 'wikistreamreader.py'
+
+    os.mkdir(path_outdir)
     p = subprocess.Popen(
         # useful for tests: sleep gives return code -15 (in Python) if SIGTERM is sent
         # ['/bin/sleep', '100'],
-        [str(path_sr)],
+        [str(path_sr), '--outdir='+str(path_outdir)],
         cwd=test_dir # CWD = directory where the script lives
         )
 
