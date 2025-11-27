@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+# Tests for streamreader.
+# Most these tests require an Internet connection since the stream reader
+# connects to the data source.
+#
+# Christoph Lechner, 2025-Nov-27
+
 import subprocess
 import threading
 import time
@@ -11,8 +17,11 @@ from pathlib import Path
 ### TEST REACTION TO SIGNALS ###
 ################################
 
+signal_tests_sleep=5
+signal_tests_list_files=False
+
 def send_signal(pid, *, ignore_process_lookup_error=False, signal=signal.SIGTERM):
-    time.sleep(5)
+    time.sleep(signal_tests_sleep)
     try:
         os.kill(pid, signal)
     except ProcessLookupError as e:
@@ -59,9 +68,10 @@ def test_honors_SIGTERM(capsys, tmp_path):
     p.wait()
     t.join()
 
-    with capsys.disabled():
-        print(f'\n*** contents of output directory {str(path_outdir)} ***')
-        subprocess.run(['/bin/ls', '-ltr', path_outdir])
+    if signal_tests_list_files:
+        with capsys.disabled():
+            print(f'\n*** contents of output directory {str(path_outdir)} ***')
+            subprocess.run(['/bin/ls', '-ltr', path_outdir])
 
     rc = p.returncode
     print(f'exit code was {rc}')
@@ -88,11 +98,19 @@ def test_honors_SIGUSR1(capsys, tmp_path):
     p.wait()
     t.join()
 
-    with capsys.disabled():
-        print(f'\n*** contents of output directory {str(path_outdir)} ***')
-        subprocess.run(['/bin/ls', '-ltr', path_outdir])
-
     rc = p.returncode
     print(f'exit code was {rc}')
-    assert rc==0
 
+    if signal_tests_list_files:
+        with capsys.disabled():
+            print(f'\n*** contents of output directory {str(path_outdir)} ***')
+            subprocess.run(['/bin/ls', '-ltr', path_outdir])
+
+    # count files matching expected filename pattern
+    lof = list(path_outdir.glob('stream_*.gz.ready'))
+    nfiles = len(lof)
+    #with capsys.disabled():
+    #    print(f'nfiles={nfiles}')
+
+    assert rc==0
+    assert nfiles>=2
