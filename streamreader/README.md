@@ -1,13 +1,14 @@
 # README
 ## Introduction
-According to the [description](https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service) the HTTPS connection is reset after about 15 minutes. Therefore a special client is required.
+The program `wikistreamreader.py` implements a client to store a Wikimedia event stream.
+This dedicated client is needed, since according to the [description](https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service) the HTTPS connection is reset after about 15 minutes.
 
 See the [description of the EventStreams HTTP Service at wikimedia.org](https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service) for more (technical) details.
 
 ## Preparations
-Ideally a dedicated user account is used to run this program, but this is not necessary.
+It is recommended to set up a dedicated user account to run this program, but it is not required.
 
-For running the program `wikistreamreader.py` a dedicated user account is prepared. Password-based login is disabled by purpose and ssh-public-key login is also not available.
+In my setup, a dedicated user was prepared. Password-based login is disabled by purpose and ssh-public-key login is also not available.
 The specifics are described [here](config_permissions.md).
 
 ## Setup/Preparation
@@ -22,6 +23,8 @@ pip install -r requirements.txt
 ### For Production: Running using systemctl
 One key advantage of using `systemd` is that the program is launched at system start up and is automatically restarted in the unlikely case of a crash.
 For a few notes taken while setting up my installation, see [here](config_systemctl.md).
+
+As described below, HTTP-based health monitoring is available.
 
 ### For Testing: Running on the Command Line
 The simplest way to run it is to execute
