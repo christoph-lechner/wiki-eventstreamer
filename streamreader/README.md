@@ -20,7 +20,7 @@ pip install -r requirements.txt
 
 ## Running it
 ### For Production: Running using systemctl
-The advantage of using `systemd` is that the program is launched at system start up and is automatically restarted in the unlikely case of a crash.
+One key advantage of using `systemd` is that the program is launched at system start up and is automatically restarted in the unlikely case of a crash.
 For a few notes taken while setting up my installation, see [here](config_systemctl.md).
 
 ### For Testing: Running on the Command Line
@@ -65,9 +65,8 @@ In case the program is restarted, the `checkpoint_*` file contains information t
 
 
 ### Signals
-(Signal handling was implemented on 2025-Nov-10.)
-
 * SIGTERM results in output file being closed (checkpoint file is **not** removed). For instance, this signal is sent by `systemd` when the system is being rebooted.
+* SIGINT: The reaction to SIGINT (received when the user presses `<Ctrl>-<C>`) is the same as for SIGTERM
 * SIGUSR1 triggers output file rotation
 
 #### Example: Signal `SIGUSR1` triggers output file rotation
@@ -88,4 +87,20 @@ total 2264
 -rw-r--r-- 1 dataacq dataacq   21667 Nov 10 20:27 stream_20251110T202710_000002.gz
 drwxrwxr-x 3 dataacq dataacq    4096 Nov 10 20:14 u
 dataacq@demosrv:~/wiki/wiki-eventstreamer/streamreader$
+```
+
+### HTTP-based health checking
+Providing the option `--status_port`, enables HTTP-based health checking. This results in operation of a FastAPI-based HTTP server on this port.
+
+Depending on the time since the last event was received, either [HTTP status code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) 200 or HTTP status code 500 are returned. These codes are considered as good/bad by any website monitoring software.
+
+Both `GET` and `HEAD` requests are supported (in this example the argument `--status_port=9999` was given):
+```
+$ curl --head http://localhost:9999/check
+HTTP/1.1 200 OK
+date: Fri, 28 Nov 2025 13:08:23 GMT
+content-length: 0
+
+$ curl http://localhost:9999/check
+OK
 ```
