@@ -1,6 +1,11 @@
 # README
 Christoph Lechner, Nov 2025
 
+* [Summary](#summary)
+* [Structure of the System](#structure-of-the-system)
+* [Technologies](#technologies)
+* [Details](#details)
+
 ## Summary
 Wikipedia is one of the largest collaborative knowledge projects in history. Every month, contributors around the world produce millions of edits. Understanding these changes (who makes them; which article is changed; ...) can be interesting for a wide range of reasons:
 * x
@@ -16,8 +21,18 @@ Some selected key facts about the used data stream:
 
 The received data is stored in gzip-compressed files (suitable for long-term archiving) and is loaded into an SQL database in hourly batches. There the data is available for analysis.
 
+![Screenshot of streamlit Panel](sl/img/screenshot_tt_01_cropped.png)
+
 ## Structure of the System
 ![Layout](doc/img/schematic.png)
+
+## Technologies
+* OS: Ubuntu Server 24.04.3 LTS
+* PostgreSQL v18
+* Python 3.10 or newer
+  * pytest
+* Apache Airflow 3.1.3
+* streamlit
 
 ## Details
 For many components of the system there are resources with more details:
