@@ -1,2 +1,6 @@
 requests-sse == 0.5.2
 
+# for remote health checking
+uvicorn
+fastapi
+
