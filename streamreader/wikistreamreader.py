@@ -29,6 +29,9 @@ cfg = {
 
     # output directory (absolute paths preferrable)
     'output_directory':'/srv/wikiproj/streamdata_in',
+
+    # For HTTP-based health checking (if enabled). Age of last event seen that is still "good". Note that this cannot be changed at runtime.
+    'healthcheck_maxage': 900,
 }
 
 parser = argparse.ArgumentParser()
@@ -276,7 +279,7 @@ if __name__=="__main__":
         #    sudo iptables -I INPUT -p tcp -s 185.15.59.224 --dport 33632 -j DROP
         # After the maximum age has been reached, the status will transition
         # from OK to error.
-        status['healthcheck'] = Healthcheck(http_port=args.status_port, max_age=900)
+        status['healthcheck'] = Healthcheck(http_port=args.status_port, max_age=cfg['healthcheck_maxage'])
         status['healthcheck'].start_server()
 
     status['events_in_file']=0
