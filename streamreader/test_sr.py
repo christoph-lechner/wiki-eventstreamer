@@ -18,6 +18,9 @@ import json
 ################################
 ### TEST REACTION TO SIGNALS ###
 ################################
+# - SIGTERM
+# - SIGUSR1 test also verifies that streamdumps are valid .gz files and
+#   do not contain bad json
 
 signal_tests_sleep=5
 signal_tests_list_files=False
@@ -149,6 +152,5 @@ def test_honors_SIGUSR1(capsys, tmp_path):
     assert nfiles>=2
 
     ### test that output files are valid .gz format
-    with capsys.disabled():
-        for fn in lof:
-            inspect_outfile(fn=fn)
+    for fn in lof:
+        inspect_outfile(fn=fn)
