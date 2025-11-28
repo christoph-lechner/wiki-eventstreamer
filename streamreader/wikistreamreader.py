@@ -29,17 +29,30 @@ cfg = {
 
     # output directory (absolute paths preferrable)
     'output_directory':'/srv/wikiproj/streamdata_in',
+
+    # For HTTP-based health checking (if enabled). Age of last event seen that is still "good". Note that this cannot be changed at runtime.
+    'healthcheck_maxage': 900,
 }
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--outdir', type=str, help='output directory')
+
+# HTTP-based monitoring of the current status
+# You get HTTP status 200 if everything is OK (events are being processed),
+# and HTTP status 500 if there is an issue.
+# Use for example "curl --head http://localhost:9999/check" to check.
+parser.add_argument('--status_port', type=int, help='simple HTTP server for remote status checking', default=None)
 args = parser.parse_args()
 
 if args.outdir:
     cfg['output_directory'] = args.outdir
 
-# print(cfg)
-# sys.exit()
+if args.status_port:
+    # import here: break early when there are missing dependencies
+    from healthcheck import Healthcheck
+
+#print(args)
+#sys.exit(1)
 
 #####
 
@@ -153,7 +166,7 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
                             checkpoint_throttle_cntr=0
 
                         if done_event.is_set():
-                            print('got SIGTERM -> stopping: closing output file, not deleting checkpoint file so we can resume')
+                            print('got SIGTERM/SIGINT -> stopping: closing output file, not deleting checkpoint file so we can resume')
                             # same code block as in outfile_rotate
                             fnold = status['fn']
                             fnnew = fnold+'.ready'
@@ -164,11 +177,20 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
                             #
                             print('stopping')
                             keep_running = False
+                            #
+                            if status['healthcheck']:
+                                status['healthcheck'].stop_server()
+
                             break
 
                         # process the *raw* event
                         if cb_raw is not None:
                             cb_raw(event)
+
+                        # heartbeat
+                        if status['healthcheck']:
+                            status['healthcheck'].heartbeat()
+                            
                         """
                         In very rare cases, expected fields may be missing from the parsed JSON data. On 2025-Nov-05, this script was crashing after a few hours and more than 300000 processed messages with the following exception (crash was reproducible):
                         Traceback (most recent call last):
@@ -189,6 +211,8 @@ def get_stream_data(url = 'https://stream.wikimedia.org/v2/stream/recentchange',
         except InvalidStatusCodeError as e:
             print(f'EventSource: HTTP status code: {e.status_code}. Retrying...')
             time.sleep(5)
+
+
 
 #################
 ### MAIN CODE ###
@@ -247,6 +271,17 @@ def cb_process_raw(event, status):
 
 if __name__=="__main__":
     status={}
+    status['healthcheck'] = None
+    if args.status_port:
+        # To test the effect of the time out on your **development** machine,
+        # you can use 'iptables' to block the TCP connection streaming the
+        # data. For instance I used (local port from "netstat -A inet -an")
+        #    sudo iptables -I INPUT -p tcp -s 185.15.59.224 --dport 33632 -j DROP
+        # After the maximum age has been reached, the status will transition
+        # from OK to error.
+        status['healthcheck'] = Healthcheck(http_port=args.status_port, max_age=cfg['healthcheck_maxage'])
+        status['healthcheck'].start_server()
+
     status['events_in_file']=0
     status['fng'] = FilenameGen(datadir=cfg['output_directory'])
     status['fn'] = status['fng'].getfn()
@@ -259,8 +294,10 @@ if __name__=="__main__":
 
     # Install signal handlers
     # SIGTERM is handled for graceful termination
+    # SIGINT  is handled for graceful termination (user pressed <Ctrl>-<C>)
     # SIGUSR1 is handled to trigger rotation of output file
     signal.signal(signal.SIGTERM, sighandler_term)
+    signal.signal(signal.SIGINT,  sighandler_term)
     signal.signal(signal.SIGUSR1, sighandler_rot)
 
     get_stream_data(url=cfg['stream_url'], cb=cb_demo_user, cb_raw=cb_raw)
