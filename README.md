@@ -1,6 +1,8 @@
 # README
 Christoph Lechner, Nov 2025
 
+
+Table of Contents
 * [Summary](#summary)
 * [Structure of the System](#structure-of-the-system)
 * [Technologies](#technologies)
@@ -21,6 +23,7 @@ Some selected key facts about the used data stream:
 
 The received data is stored in gzip-compressed files (suitable for long-term archiving) and is loaded into an SQL database in hourly batches. There the data is available for analysis.
 
+The following screenshot from the [streamlit-based panels](sl/) indicates the hourly edit counts for several wikis over approximately two weeks.
 ![Screenshot of streamlit Panel](sl/img/screenshot_tt_01_cropped.png)
 
 ## Structure of the System
