@@ -17,8 +17,9 @@ import argparse
 cfg = {
     # Download of historical data (WARNING: can generate lots of data).
     # See section "Historical Consumption" in https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service (accessed 2025-Nov-07)
-    'stream_url': 'https://stream.wikimedia.org/v2/stream/recentchange?since=2025-11-09T00:00:00Z',
-    # 'stream_url': 'https://stream.wikimedia.org/v2/stream/recentchange',
+    # 'stream_url': 'https://stream.wikimedia.org/v2/stream/recentchange?since=2025-11-09T00:00:00Z',
+
+    'stream_url': 'https://stream.wikimedia.org/v2/stream/recentchange',
 
     # Force rotation after this number of events in file
     # As of 2025-Nov, the i"recentchange" gives less than 200000 events per hour (on avg, every event corresponds to about 150 bytes in the file)
