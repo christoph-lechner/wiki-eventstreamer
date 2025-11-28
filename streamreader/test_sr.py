@@ -12,6 +12,8 @@ import time
 import os
 import signal
 from pathlib import Path
+import gzip
+import json
 
 ################################
 ### TEST REACTION TO SIGNALS ###
@@ -54,6 +56,37 @@ def run_program(tmp_path):
     print(p.pid)
 
     return ({'p':p, 'outdir':path_outdir})
+
+
+def inspect_outfile(*, fn, do_gzip=True):
+    """
+    If gzip file was truncated, this code likely throws the exception
+    "EOFError: Compressed file ended before the end-of-stream marker was reached"    
+    """
+    # helper function so we can use "with ... as fin" for both modes
+    def open_infile(fn_in):
+        print(f'Input file: {fn_in}')
+        if do_gzip:
+            return gzip.open(fn_in,'r')
+        else:
+            return open(fn_in,'rb')
+
+    linecntr=0
+    bad_jsoncntr=0
+    with open_infile(fn) as fin:
+        for l_ in fin:
+            l_ = l_.decode() # we use file in 'rb' mode now so we can switch transparently between gzip'd and standard files
+            linecntr += 1
+            #
+            try:
+                event = json.loads(l_)
+            except ValueError:
+                bad_jsoncntr+=1
+                continue
+
+    print(f'lines={linecntr}, bad_json={bad_jsoncntr}')
+    # assert linecntr>=1 # this one would fail, if the server does not send any events at the moment
+    assert bad_jsoncntr==0
 
 ### First (and most important) test: Check that streamreader reacts to SIGTERM ###
 def test_honors_SIGTERM(capsys, tmp_path):
@@ -114,3 +147,8 @@ def test_honors_SIGUSR1(capsys, tmp_path):
 
     assert rc==0
     assert nfiles>=2
+
+    ### test that output files are valid .gz format
+    with capsys.disabled():
+        for fn in lof:
+            inspect_outfile(fn=fn)
