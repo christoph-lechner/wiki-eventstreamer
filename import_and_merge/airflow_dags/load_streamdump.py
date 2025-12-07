@@ -29,7 +29,7 @@ IS_INERT = False # True
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     catchup=False,
     max_active_runs=1, # run only one of these at a time
-    dagrun_timeout=datetime.timedelta(minutes=60),
+    dagrun_timeout=datetime.timedelta(minutes=12*60),
 )
 def LoadStreamdump(list_of_files: list[str] = None):
     # this in turn does imports that might take some time -> avoid top level imports
