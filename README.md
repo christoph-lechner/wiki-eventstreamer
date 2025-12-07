@@ -19,7 +19,7 @@ The information needed to realize these applications is provided by [Wikimedia](
 Some selected key facts about the used data stream:
 * just the meta data (not the changes themselves),
 * [JSON](https://en.wikipedia.org/wiki/JSON) format, 
-* average event rate of the stream is about 35 events/s (in Nov 2025), with burst rates being much higher.
+* average event rate of the stream is about 35 events/s (in Nov 2025), with a peak burst rate of about 90 events/s (computed for 900-second time ranges).
 
 The received data is stored in gzip-compressed files (suitable for long-term archiving) and is loaded into an SQL database in hourly batches. There the data is available for analysis.
 
@@ -28,6 +28,11 @@ The following screenshot from the [streamlit-based panels](sl/) indicates the ho
 
 ## Structure of the System
 ![Layout](doc/img/schematic.png)
+
+The data flow is as follows:
+The wikimedia event stream arriving via an SSL-encrypted connection is dumped to files by the ["streamreader"](streamreader/) program running on a server system in a data center.
+Resulting files are downloaded every hour via rsync/ssh to a local archive (storage on the source system is limited) and are imported/merged into the postgreSQL database using Apache Airflow [DAGs (directed acyclic graphs)](import_and_merge/airflow_dags/).
+The data stored in this postgreSQL database is available for visualization by a streamlit-based interactive [plotting solution](sl/) running inside the web browser or for other applications (see [below for more details](#details)). Access to the plotting solution is provided via an HTTPS reverse proxy server running Apache version 2.4.
 
 ## Technologies
 * OS: Ubuntu Server 24.04.3 LTS
@@ -42,7 +47,7 @@ For many components of the system there are resources with more details:
 * [Python program](streamreader/) to store the wikimedia event stream. In my case this program is running on a separate machine (and there using a dedicated user account).
 * For downloading the stored information from the wikimedia event stream:
   * Python Program for transferring the files can be found [here](https://github.com/christoph-lechner/wiki-eventstreamer-transfer)
-  * Apache Airflow DAGs for importing and merging the data in the files into the PostgresQL database are [here](import_and_merge/airflow_dags/)
+  * Apache Airflow DAGs (directed acyclic graphs) for importing and merging the data in the files into the PostgresQL database are [here](import_and_merge/airflow_dags/)
 * To visualize (or otherwise process) the information contained in the database
   * Streamlit-based plotting solution can be found [here](sl/)
   * To make this Streamlit-based plotting solution available via HTTPS, a reverse proxy using Apache2 was set up. It also does user authentication. For a few configuration details, see [here](doc/apache2_revproxy/)
