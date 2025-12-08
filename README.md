@@ -10,9 +10,9 @@ Table of Contents
 
 ## Summary
 Wikipedia is one of the largest collaborative knowledge projects in history. Every month, contributors around the world produce millions of edits. Understanding these changes (who makes them; which article is changed; ...) can be interesting for a wide range of reasons:
-* x
-* y
-* z
+* Multiple edits of a page by several users: This could be either a breaking news event or a edit war.
+* Curiosity: spot interesting trends in changes
+* ...
 
 The information needed to realize these applications is provided by [Wikimedia](https://www.wikimedia.org/), the organization operating the Wikipedia websites, as [data stream](https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams_HTTP_Service). Note that for privacy reasons, no stream with page views is available, however, cumulated access data (on an per-hour basis) are available [here](https://dumps.wikimedia.org/other/pageviews/2025/2025-11/).
 
