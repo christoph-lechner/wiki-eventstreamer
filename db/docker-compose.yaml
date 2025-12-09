@@ -45,7 +45,7 @@ services:
       - max_parallel_maintenance_workers=2
     volumes:
       # for postgres:18 according to https://github.com/docker-library/postgres/issues/37#issuecomment-3476426533
-      - "./postgres-data:/var/lib/postgresql"
+      - "/srv/postgres-data-wiki:/var/lib/postgresql"
     ports:
       - "15432:5432"
   pgadmin:
