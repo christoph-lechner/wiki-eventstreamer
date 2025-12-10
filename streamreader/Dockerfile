@@ -7,7 +7,8 @@ FROM ubuntu:24.04
 # (b) pip3 argument --break-system-packages
 
 RUN apt-get update -y && \
-    apt-get install -y python3 python3-pip python3-venv
+    apt-get install -y python3 python3-pip python3-venv && \
+    rm -rf /var/lib/apt/lists/*
 
 # create virtual environment and activate it
 RUN python3 -m venv /opt/venv
