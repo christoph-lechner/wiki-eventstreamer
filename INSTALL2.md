@@ -224,7 +224,7 @@ ORDER BY date,hour,event_wiki;
 
 
 ## Preparation of Apache Airflow
-Note that, as pointed out in [the Airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html), **this setup is not suitable for production use.**
+Note that, as pointed out in [the Airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html), **this setup is not suitable for production use). inspecting the UID/GID inside the containers, the processes appear to be running with group ID 0.**
 
 ### Changes to docker-compose.yaml
 Thi directory `import_and-merge/docker-conf/` contains the `docker-compose.yaml` file that can be used to get Airflow running in Docker.
@@ -296,8 +296,9 @@ In my setup, this takes approx. 2 minutes.
 Open the web browser and log in using user `airflow` and the password from the `.env` file. **Note that as this connection is not encrypted, the password and all further information that is entered could be eavesdropped.** 
 
 We arrive at the start screen.
+![Airflow Start Screen](doc/img/install_20251211_airflow_initial_thumb.png)
 Especially the list of DAGs is still empty:
-**insert two screenshots here**
+![Airflow DAGs](doc/img/install_20251211_airflow_initial2_thumb.png)
 
 ### Adding the DAGs
 Let's add the DAGs for this project.
@@ -331,7 +332,7 @@ wikiproj@wikisrv:/srv/airflow/dags$
 ```
 
 Airflow periodically scans the directories, so after some time Airflow should list them under the menu point DAGs.
-**add screenshot**
+![Airflow with DAGs detected](doc/img/install_20251211_airflow_initial_thumb.png)
 
 ### Set up the DB connection
 The value of `DB_CONN_ID` is the ID of the connection that needs to be defined in Airflow.
@@ -340,7 +341,8 @@ Admin -> Connections
 On the top-right "Add Connection".
 Enter the name `wikidb` and select connection type "Postgres" (it can take a few seconds until the list in the drop-down menu is prepared).
 Again, because we are connected to Airflow via HTTP (and not via HTTPS), all data we enter here could be eavesdropped!
-**insert screenshot of form and of status after addition**
+![Airflow DB Config](doc/img/install_20251211_airflow_DBconfig1_thumb.png)
+![Airflow DB Config](doc/img/install_20251211_airflow_DBconfig2_thumb.png)
 
 This is the only connection needed, in particular no file-system-related connections need to be set up as the current version of the script (as of 2025-Dec) assumes that everything is running on the local filesystem.
 
@@ -379,14 +381,17 @@ default@5b9002effb13:/opt/airflow$
 ```
 As expected, the file that was placed on the host in directory `/srv/wikidata/in` appears inside the container in the path `/mnt` and there is permission to enter the directory.
 
-### x
+### Database Connection Test
 To check the DB connection without launching any importer DAGs, a new DAG `db_conntest.py` was created while writing this installation guide.
 It was dropped into the directory `/srv/airflow/dags`.
+![Airflow Conntest DAG](doc/img/install_20251211_airflow_DBconntest1_thumb.png)
 
 You can manually trigger the DAG
-** insert screenshot **
+![Airflow Conntest DAG](doc/img/install_20251211_airflow_DBconntest2_thumb.png)
 and inspect the log to see that everything worked.
+![Airflow Conntest DAG](doc/img/install_20251211_airflow_DBconntest3_thumb.png)
+![Airflow Conntest DAG](doc/img/install_20251211_airflow_DBconntest4_thumb.png)
 
 To demonstrate what happens if the DB connection does not work, I changed the password in the configuration definition, and then the triggered DAG run fails.
-** insert screenshot **
+![Airflow Conntest DAG](doc/img/install_20251211_airflow_DBconntest_testbadpass_thumb.png)
 
