@@ -448,9 +448,8 @@ cl@wikisrv:/srv/airflow$ curl -X POST http://localhost:9080/api/v2/dags/db_connt
   -d '{ "logical_date": "2025-12-11T21:00:00Z" }'
 {"dag_run_id":"manual__2025-12-11T21:00:00+00:00","dag_id":"db_conntest","logical_date":"2025-12-11T21:00:00Z","queued_at":"2025-12-11T20:43:39.796346Z","start_date":null,"end_date":null,"duration":null,"data_interval_start":"2025-12-11T21:00:00Z","data_interval_end":"2025-12-11T21:00:00Z","run_after":"2025-12-11T21:00:00Z","last_scheduling_decision":null,"run_type":"manual","state":"queued","triggered_by":"rest_api","triggering_user_name":"dagtrig","conf":{},"note":null,"dag_versions":[{"id":"019b0e3e-ad6a-7870-9642-20edede61078","version_number":1,"dag_id":"db_conntest","bundle_name":"dags-folder","bundle_version":null,"created_at":"2025-12-11T16:29:07.306413Z","dag_display_name":"db_conntest","bundle_url":null}],"bundle_version":null,"dag_display_name":"db_conntest"}cl@wikisrv:/srv/airflow$
 ```
-This worked, the DAG run has been queued (the `logical_data` is in the future):
+This worked, the DAG run has been queued (the `logical_date` is in the future):
 
-**screenshot here**
 ![Screenshot Airflow: DAG run was triggered](doc/img/install_20251211_airflow_dagrun_triggered_thumb.png)
 
 
@@ -464,7 +463,7 @@ As I do not have a DNS entry for the virtual machine writing the event stream in
 
 This will be needed for automatic transfer of the stored data.
 
-**TODO/FIXME: The described procedure needs to be carried out for wikidata@wikisrv***
+**TODO/FIXME: The described procedure needs to be carried out for wikidata@wikisrv**
 
 ### ONLY IF NEEDED: prepare public key
 This may be needed on the machine that is going to download the files via ssh/rsync, i.e. the machine in the internal network.
@@ -551,7 +550,7 @@ wikidata@wikisrv:~/prod_transfer$ source /home/wikidata/prod_transfer/venv_prod/
 (venv_prod) wikidata@wikisrv:~/prod_transfer$
 ```
 
-Clone the git repository (at the time of this writing the git commit id is c01028d, date: 2025-12-07)
+Clone the git repository (at the time of this writing the git commit id was e8cbeea, date: 2025-12-12; this commit includes minor changes made while writing this text)
 ```
 (venv_prod) wikidata@wikisrv:~/prod_transfer$ git clone https://github.com/christoph-lechner/wiki-eventstreamer-transfer.git
 [..]
