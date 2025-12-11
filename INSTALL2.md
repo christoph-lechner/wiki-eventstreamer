@@ -4,6 +4,13 @@
 * install openssh server
 * hostname wikisrv
 
+This is the resulting TCP port configuration:
+* 8080: HTTP pgadmin
+* 9080: HTTP Airflow
+* HTTP streamlit
+* HTTP database freshness status
+* 15432: postgreSQL
+
 ## Installation of Docker
 Following the official installation instructions
 https://docs.docker.com/engine/install/ubuntu/
@@ -408,3 +415,118 @@ To demonstrate what happens if the DB connection does not work, I changed the pa
 
 ![Airflow Conntest DAG](doc/img/install_20251211_airflow_DBconntest_testbadpass_thumb.png)
 
+
+
+### Setting up Airflow account for DAG Run Triggering via HTTP
+```
+cl@wikisrv:/srv/airflow$ sudo docker compose exec airflow-scheduler airflow users create --username dagtrig --firstname dagtrig --lastname dagtrig --role User -e "dagtrig@dagtrig"
+[..]
+User "dagtrig" created with role "User"
+```
+
+### Optional: Triggering DAG Run via HTTP
+We follow [https://airflow.apache.org/docs/apache-airflow/stable/security/api.html](https://airflow.apache.org/docs/apache-airflow/stable/security/api.html).
+These credentials are now used to obtain a JWT token that will be used for authentication:
+```
+cl@wikisrv:/srv/airflow$ curl -X POST http://localhost:9080/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "dagtrig",
+    "password": "your_password"
+  }'
+{"access_token":"..."}
+```
+This token is valid only for a limited time (in my installation about 24 hours) and thus has to be obtained briefly before the actual REST API calls.
+
+Let's trigger a DAG run next.
+```
+cl@wikisrv:/srv/airflow$ curl -X POST http://localhost:9080/api/v2/dags/db_conntest/dagRuns \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -d '{ "logical_date": "2025-12-11T21:00:00Z" }'
+{"dag_run_id":"manual__2025-12-11T21:00:00+00:00","dag_id":"db_conntest","logical_date":"2025-12-11T21:00:00Z","queued_at":"2025-12-11T20:43:39.796346Z","start_date":null,"end_date":null,"duration":null,"data_interval_start":"2025-12-11T21:00:00Z","data_interval_end":"2025-12-11T21:00:00Z","run_after":"2025-12-11T21:00:00Z","last_scheduling_decision":null,"run_type":"manual","state":"queued","triggered_by":"rest_api","triggering_user_name":"dagtrig","conf":{},"note":null,"dag_versions":[{"id":"019b0e3e-ad6a-7870-9642-20edede61078","version_number":1,"dag_id":"db_conntest","bundle_name":"dags-folder","bundle_version":null,"created_at":"2025-12-11T16:29:07.306413Z","dag_display_name":"db_conntest","bundle_url":null}],"bundle_version":null,"dag_display_name":"db_conntest"}cl@wikisrv:/srv/airflow$
+```
+This worked, the DAG run has been queued (the `logical_data` is in the future):
+
+**screenshot here**
+![Screenshot Airflow: DAG run was triggered](doc/img/install_20251211_airflow_dagrun_triggered_thumb.png)
+
+
+
+
+
+
+
+## Setting up SSH login with public key auth.
+As I do not have a DNS entry for the virtual machine writing the event stream into files, I added it to the `/etc/hosts` file.
+
+This will be needed for automatic transfer of the stored data.
+
+### ONLY IF NEEDED: prepare public key
+This may be needed on the machine that is going to download the files via ssh/rsync, i.e. the machine in the internal network.
+**Do not run this if you already have the keys!**
+
+```
+cl@wikisrv:~$ XX_ssh-keygen # remove the leading "XX_" if you are sure that you wish to generate the keys
+Generating public/private ed25519 key pair.
+Enter file in which to save the key (/home/cl/.ssh/id_ed25519): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/cl/.ssh/id_ed25519
+Your public key has been saved in /home/cl/.ssh/id_ed25519.pub
+The key fingerprint is:
+SHA256:[redacted] cl@wikisrv
+The key's randomart image is:
++--[ED25519 256]--+
+[..]
++----[SHA256]-----+
+cl@wikisrv:~$
+```
+
+### Transfer public key to target account
+Since password-based log in is disabled for `dataxfer`, the following manual workaround is used (**we display here the public key; under no circumstances must the private key be revealed**):
+```
+cl@wikisrv:~/.ssh$ cat id_ed25519.pub 
+ssh-ed25519 [.. redacted ..] cl@wikisrv
+```
+
+We connect to the machine running the streamdumper (as positive side-effect we store also the host key of the other system):
+```
+cl@wikisrv:~$ ssh cl@wikiacq
+The authenticity of host 'wikiacq (192.168.122.100)' can't be established.
+ED25519 key fingerprint is SHA256:[redacted].
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'wikiacq' (ED25519) to the list of known hosts.
+cl@wikiacq's password: 
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.8.0-88-generic x86_64)
+[..]
+cl@wikiacq:~$ sudo -i
+[sudo] password for cl: 
+root@wikiacq:~# su - dataxfer
+```
+The `authorized_keys` file does not exist yet. If it is already existing this normally means that one can login using this account. Then the manual procedure described here should not be used as corrupting the `authorized_keys` file can result in being locked out of the account.
+```
+dataxfer@wikiacq:~$ cd .ssh
+-bash: cd: .ssh: No such file or directory
+dataxfer@wikiacq:~$ mkdir .ssh
+dataxfer@wikiacq:~$ cd .ssh
+dataxfer@wikiacq:~/.ssh$ vim authorized_keys
+
+Add the line to the file exactly as formated above.
+
+dataxfer@wikiacq:~/.ssh$ chmod 600 authorized_keys 
+```
+
+Let's try to log in using public key auth. If it works, you should get the prompt as `dataxfer@wikiacq` without being prompted for any passwords (remember that password-based login is disabled for this account):
+```
+cl@wikisrv:~$ ssh dataxfer@wikiacq
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.8.0-88-generic x86_64)
+
+[..]
+
+dataxfer@wikiacq:~$ 
+logout
+Connection to wikiacq closed.
+cl@wikisrv:~$
+```
