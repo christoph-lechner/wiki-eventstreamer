@@ -1,11 +1,10 @@
-To build it (`name_of_image` could be something like `cl/dev_wikistreamreader`):
+To build it (`name_of_image` could be something like `wikistreamreader:latest`):
 ```
-sudo docker build -t <name_of_image> .
+sudo docker build --build-arg GIT_INFO=$(git describe --dirty --always --tags) -t <name_of_image> .
 ```
 
 To run it:
 ```
-docker run --user=cl -v "./datadir:/data" -p 9999:8080 -it <name_of_image>
 sudo docker run --user=1000:1000 -v "./datadir:/data" -p 9999:8080 -it <name_of_image>
 ```
 

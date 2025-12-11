@@ -1,5 +1,6 @@
 FROM ubuntu:24.04
 
+ARG GIT_INFO=unspecified
 
 # Ubuntu 24.04 enforces PEP 668, which prevents system-wide pip installations.
 # Prevents system-wide installations with pip3 (a good idea...), solutions are
@@ -20,6 +21,9 @@ RUN pip3 install -r requirements.txt --no-cache-dir
 
 COPY . /app/
 
+# Write git commit ID only quite late in the process (in Docker's layering approach every RUN generates another layer). The git commit ID is expected to change more often than (for instance) Debian packages...
+RUN echo "$GIT_INFO" > /app/git_info.txt
+
 # safe default UID
 USER nobody
 
@@ -27,7 +31,6 @@ WORKDIR /app
 
 VOLUME ["/data"]
 EXPOSE 8080
-
 
 # CMD ["/bin/bash"]
 CMD ["./wikistreamreader.py", "--outdir=/data/", "--status_port=8080"]
