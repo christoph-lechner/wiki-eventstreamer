@@ -10,6 +10,8 @@ For the preparation of the installation guide two virtual machines with fresh in
 
 
 # data acq
+**Remark 2025-Dec: Currently, implementation of automatic removal of very old files with streamdumps is still pending.**
+
 Virtual machine configured with
 * 2GB RAM
 * 30GB disk (in the setup process, 20GB for `/`, 2GB for `/boot`)
@@ -19,11 +21,19 @@ Virtual machine configured with
 Install needed packages
 ```
 cl@wikiacq:~$ sudo apt-get install python3-venv
-
 ```
 
 ## Creating the Users
 For automatic preparation, a script was prepared. This script executes the manual user account configuration from my [notes](https://github.com/christoph-lechner/wiki-eventstreamer/blob/82404aa5568c42a418332d222f80c50cf733552d/streamreader/config_permissions.md). Use at your own risk. The name of the script is `setup-01.sh`.
+
+These are the accounts that were created.
+```
+cl@wikiacq:~$ id dataacq
+uid=1001(dataacq) gid=1001(dataacq) groups=1001(dataacq),1003(wikidata)
+cl@wikiacq:~$ id dataxfer
+uid=1002(dataxfer) gid=1002(dataxfer) groups=1002(dataxfer),1003(wikidata)
+```
+Note the extra group `wikidata`. Users needing read-only access to the gathered stream dumps are members of this group, so one could also add the non-privileged user of the admins to this group.
 
 ## Preparation of Data Directory
 Having created the user accounts, we can prepare the directory that will be used for data storage.
@@ -198,7 +208,7 @@ cl@wikiacq:~$
 For remote checking of the status of the program, a HTTP server is available.
 In the configuration described in this document, the server is active on port 9090. Before activating it, you should understand the risks that come with opening sockets and operating servers and take necessary the precautions, such as firewalling.
 
-If the program has been receiving at least one event from Wikimedia, we will get a HTTP 200:
+If the program has been receiving at least one event from Wikimedia, we will get a [HTTP status 200](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes):
 ```
 cl@clpc:/tmp$ curl --head http://192.168.122.100:9090/check
 HTTP/1.1 200 OK
@@ -207,3 +217,6 @@ content-length: 0
 
 cl@clpc:/tmp$
 ```
+GET requests are also supported.
+
+On the other hand, if no event has been received in the previous 900 seconds (time can be adjusted at the top of file `wikistreamreader.py`), then this HTTP request returns HTTP status 500 (Internal Server Error). A website monitoring tool will consider this status as "down" and trigger an alert.
