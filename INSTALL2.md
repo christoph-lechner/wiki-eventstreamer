@@ -424,7 +424,9 @@ cl@wikisrv:/srv/airflow$ sudo docker compose exec airflow-scheduler airflow user
 User "dagtrig" created with role "User"
 ```
 
-### Optional: Triggering DAG Run via HTTP
+### Optional: Trigger DAG Run via HTTP
+We manually perform all steps needed to trigger a DAG Run via HTTP. The same steps are also carried out by the [transfer program](https://github.com/christoph-lechner/wiki-eventstreamer-transfer) that will be installed in the following.
+
 We follow [https://airflow.apache.org/docs/apache-airflow/stable/security/api.html](https://airflow.apache.org/docs/apache-airflow/stable/security/api.html).
 These credentials are now used to obtain a JWT token that will be used for authentication:
 ```
@@ -461,6 +463,8 @@ This worked, the DAG run has been queued (the `logical_data` is in the future):
 As I do not have a DNS entry for the virtual machine writing the event stream into files, I added it to the `/etc/hosts` file.
 
 This will be needed for automatic transfer of the stored data.
+
+**TODO/FIXME: The described procedure needs to be carried out for wikidata@wikisrv***
 
 ### ONLY IF NEEDED: prepare public key
 This may be needed on the machine that is going to download the files via ssh/rsync, i.e. the machine in the internal network.
@@ -530,3 +534,217 @@ logout
 Connection to wikiacq closed.
 cl@wikisrv:~$
 ```
+
+## Prepare Data Transfer Script
+Before we can continue, we have to install the package needed for Python3 virtual environments:
+```
+cl@wikisrv:~$ sudo apt-get install python3-venv
+```
+
+Now we can create the virtual environment
+```
+wikidata@wikisrv:~$ mkdir prod_transfer
+wikidata@wikisrv:~$ cd prod_transfer/
+wikidata@wikisrv:~/prod_transfer$ mkdir venv_prod
+wikidata@wikisrv:~/prod_transfer$ python3 -m venv /home/wikidata/prod_transfer/venv_prod/
+wikidata@wikisrv:~/prod_transfer$ source /home/wikidata/prod_transfer/venv_prod/bin/activate
+(venv_prod) wikidata@wikisrv:~/prod_transfer$
+```
+
+Clone the git repository (at the time of this writing the git commit id is c01028d, date: 2025-12-07)
+```
+(venv_prod) wikidata@wikisrv:~/prod_transfer$ git clone https://github.com/christoph-lechner/wiki-eventstreamer-transfer.git
+[..]
+```
+
+Install the needed Python packages:
+```
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$ pip3 install -r requirements.txt 
+```
+
+Now, let's store the username/password needed to trigger the DAG run via HTTP:
+```
+(venv_prod) wikidata@wikisrv:~$ mkdir ~/.wikidb
+(venv_prod) wikidata@wikisrv:~$ cd ~/.wikidb
+(venv_prod) wikidata@wikisrv:~/.wikidb$ vim transfer_auth
+(venv_prod) wikidata@wikisrv:~/.wikidb$ chmod 600 transfer_auth 
+(venv_prod) wikidata@wikisrv:~/.wikidb$ ls -l
+total 4
+-rw------- 1 wikidata wikidata 76 Dec 11 21:47 transfer_auth
+(venv_prod) wikidata@wikisrv:~/.wikidb$ cat transfer_auth 
+export WIKIDB_AIRFLOW_USER=dagtrig
+export WIKIDB_AIRFLOW_PWD=your_password
+(venv_prod) wikidata@wikisrv:~/.wikidb$
+```
+
+Let's use the test program to obtain a JWT token. If it works this means that authentication is working:
+```
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$ . ~/.wikidb/transfer_auth
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$ ./obtain_JWT.py 
+Test: Trying to obtain JWT token from server
+That worked, this means that your username/password are correct
+Obtained token: eyJ ... B0w
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$
+```
+
+At the top of script `file_transfer.py`, a few configuration changes are needed:
+* `dir_staging` (this is the local destination directory for the transfer)
+* `xfer_source` (remote source of the data transfer in `scp` syntax)
+* `db_host`/`db_port`/`db_name`/`db_user` for accessing the postgreSQL database
+
+From `file_transfer.py`:
+```
+####################
+### BEGIN CONFIG ###
+
+dir_staging = '/srv/wikidata/in/'
+xfer_source = 'dataxfer@wikiacq:/srv/wikiproj/streamdata_in/'
+
+db_host= '192.168.122.116'
+db_port = 15432
+db_name = 'wikidb'
+# password from ~/.pgpass file (!mode 0600, otherwise file is ignored!)
+db_user = 'wikiproj'
+
+# see also airflow_api.py for Airflow API config
+
+###  END CONFIG  ###
+####################
+```
+
+The password for the postgreSQL database is stored in `~/.pgpass` (set mode 0600, otherwise the file is silently ignored!). This is the contents of the `~/.pgpass` file of user `wikidata@wikisrv`.
+```
+192.168.122.116:15432:wikidb:wikiproj:your_password
+```
+
+Let's run the program (without triggering the DAG runs)
+```
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$ ./file_transfer.py --register_in_db
+
+***********************
+*** Transfer Script ***
+***********************
+
+obtained JWT token for Airflow API
+check DB access: OK
+About to run transfer command, output will be stored in /srv/wikidata/in/rsync_log_20251211T221431.txt
+exit code of rsync command: 0
+Number of files transferred (according to rsync log): 23
+DB connection established
+List of new files not seen before:
+['stream_20251211T001623_000001.gz.ready', 'stream_20251211T002001_000001.gz.ready', 'stream_20251211T010500_000002.gz.ready', 'stream_20251211T020500_000003.gz.ready', 'stream_20251211T030500_000004.gz.ready', 'stream_20251211T040500_000005.gz.ready', 'stream_20251211T050500_000006.gz.ready', 'stream_20251211T060500_000007.gz.ready', 'stream_20251211T070500_000008.gz.ready', 'stream_20251211T080500_000009.gz.ready', 'stream_20251211T090500_000010.gz.ready', 'stream_20251211T100500_000011.gz.ready', 'stream_20251211T110500_000012.gz.ready', 'stream_20251211T120500_000013.gz.ready', 'stream_20251211T130500_000014.gz.ready', 'stream_20251211T140501_000015.gz.ready', 'stream_20251211T150509_000016.gz.ready', 'stream_20251211T160500_000017.gz.ready', 'stream_20251211T170500_000018.gz.ready', 'stream_20251211T180500_000019.gz.ready', 'stream_20251211T190500_000020.gz.ready', 'stream_20251211T200500_000021.gz.ready', 'stream_20251211T210500_000022.gz.ready']
+triggering DAG was not requested
+
+************
+*** DONE ***
+************
+
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$ 
+```
+
+The files should have been registered in the database. This is necessary for the DAGs to correctly perform the import, therefore we have a look into the database to verify that the files listed in above output are also stored in the table:
+```
+wikiproj@127.0.0.1:wikidb> SELECT filename FROM wiki_datafiles ORDER BY filename ASC;
+ 
++----------------------------------------+
+| filename                               |
+|----------------------------------------|
+| stream_20251211T001623_000001.gz.ready |
+| stream_20251211T002001_000001.gz.ready |
+| stream_20251211T010500_000002.gz.ready |
+| stream_20251211T020500_000003.gz.ready |
+| stream_20251211T030500_000004.gz.ready |
+| stream_20251211T040500_000005.gz.ready |
+| stream_20251211T050500_000006.gz.ready |
+| stream_20251211T060500_000007.gz.ready |
+| stream_20251211T070500_000008.gz.ready |
+| stream_20251211T080500_000009.gz.ready |
+| stream_20251211T090500_000010.gz.ready |
+| stream_20251211T100500_000011.gz.ready |
+| stream_20251211T110500_000012.gz.ready |
+| stream_20251211T120500_000013.gz.ready |
+| stream_20251211T130500_000014.gz.ready |
+| stream_20251211T140501_000015.gz.ready |
+| stream_20251211T150509_000016.gz.ready |
+| stream_20251211T160500_000017.gz.ready |
+| stream_20251211T170500_000018.gz.ready |
+| stream_20251211T180500_000019.gz.ready |
+| stream_20251211T190500_000020.gz.ready |
+| stream_20251211T200500_000021.gz.ready |
+| stream_20251211T210500_000022.gz.ready |
++----------------------------------------+
+SELECT 23
+Time: 0.021s
+wikiproj@127.0.0.1:wikidb>
+```
+That worked.
+
+### Preparation for First Transfer with Import
+Before we can actually trigger the first import into the database, we need to wipe out any knowledge of these files. **THIS MUST ONLY BE DONE NOW WHILE SETTING THINGS UP!**
+
+```
+wikiproj@127.0.0.1:wikidb> TRUNCATE wiki_datafiles;
+You're about to run a destructive command.
+Do you want to proceed? [y/N]: y
+Your call!
+TRUNCATE TABLE
+Time: 0.013s
+wikiproj@127.0.0.1:wikidb>
+```
+
+```
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$ mkdir xx
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$ mv /srv/wikidata/in/rsync_log_20251211T221* ./xx/
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$ mv /srv/wikidata/in/stream_20251211T*ready ./xx/
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$ ls -l /srv/wikidata/in/
+total 0
+-rw-r--r-- 1 root root 0 Dec 11 15:37 hallo
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$ rm -rf ./xx/
+(venv_prod) wikidata@wikisrv:~/prod_transfer/wiki-eventstreamer-transfer$
+```
+
+### First Transfer with Import
+Manually we run the first transfer triggering import into the database.
+
+We switch off the Python virtual environment
+```
+(venv_prod) wikidata@wikisrv:~$ deactivate
+```
+and launch the script that will later be executed as cronjob. If this executes correctly, we can be confident that everything is set up correctly for the regular data import. As in the `crontab`, we run the script with absolute path:
+```
+/home/wikidata/prod_transfer/wiki-eventstreamer-transfer/run_cron.sh
+```
+
+![Screenshot Transfer Script](doc/img/install_20251211_output_transferscript_thumb.png)
+
+![Airflow DAG Overview](doc/img/install_20251211_airflow_importrun_triggered_thumb.png)
+
+Exploring the DAG run (the very first time, the DAG run is triggered, it needs to be manually "switched on") by
+* clicking on the run
+* then on `op_importdatafiles`
+* then the log becomes visible (here stdout/stderr is collected)
+
+![Airflow Log Display](doc/img/install_20251211_airflow_importrun_log_thumb.png)
+
+The total run time of this import process was about 10 minutes.
+
+### Configuring Cronjob
+Our goal is to run this data transfer at minute 10 of every hour.
+To achieve this, we need to configure a so-called cronjob.
+We run the command: 
+```
+wikidata@wikisrv:~$ crontab -e
+```
+The line to be added at the very bottom of the file is:
+```
+10 * * * * /usr/bin/flock -n /tmp/wiki-transfer-cron.lockfile /home/wikidata/prod_transfer/wiki-eventstreamer-transfer/run_cron.sh
+```
+In the editor, save the file and exit. On the terminal you should now see
+```
+crontab: installing new crontab
+wikidata@wikisrv:~$
+```
+The new `crontab` was installed (you can check by running `crontab -l`).
+
+
+Shortly after minute 10 of the next hour, a new DAG run should become visible in Apache Airflow.
