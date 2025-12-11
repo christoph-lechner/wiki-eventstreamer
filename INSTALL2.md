@@ -139,8 +139,7 @@ Time: 0.020s
 wikiproj@127.0.0.1:wikidb>
 ```
 
-
-From `file_transfer.py`, commit id c13ae95
+## Database Schema
 ```
 CREATE TABLE wiki_datafiles(
     filename TEXT UNIQUE,
@@ -156,9 +155,8 @@ CREATE TABLE wiki_datafiles(
 );
 ```
 
-From `20251109_plotoptim.md`, commit id 4189a70, Partitionierung ziemlich weit unten.
 ```
-CREATE TABLE wiki_change_events_test(
+CREATE TABLE wiki_change_events(
     -- MD5 hash over a few fields, ensures deduplication (data is loaded into this table using MERGE command)
     _h TEXT,
     ts_event_meta_dt TIMESTAMP WITH TIME ZONE,
@@ -173,20 +171,19 @@ CREATE TABLE wiki_change_events_test(
     event_title TEXT,
     UNIQUE(_h,event_wiki)
 ) PARTITION BY LIST(event_wiki);
-CREATE TABLE wiki_change_events_test_dewiki
-	PARTITION OF wiki_change_events_test
+CREATE TABLE wiki_change_events_dewiki
+	PARTITION OF wiki_change_events
 	FOR VALUES IN ('dewiki');
-CREATE TABLE wiki_change_events_test_enwiki
-	PARTITION OF wiki_change_events_test
+CREATE TABLE wiki_change_events_enwiki
+	PARTITION OF wiki_change_events
 	FOR VALUES IN ('enwiki');
-CREATE TABLE wiki_change_events_test_hightraffic
-	PARTITION OF wiki_change_events_test
+CREATE TABLE wiki_change_events_hightraffic
+	PARTITION OF wiki_change_events
 	FOR VALUES IN ('commonswiki','wikidatawiki');
-CREATE TABLE wiki_change_events_test_otherwikis
-	PARTITION OF wiki_change_events_test DEFAULT;
+CREATE TABLE wiki_change_events_otherwikis
+	PARTITION OF wiki_change_events DEFAULT;
 ```
 
-From `doc/schema.md`, commit id `16bbb6c`
 ```
 CREATE MATERIALIZED VIEW wiki_matview_countsall AS
 SELECT
