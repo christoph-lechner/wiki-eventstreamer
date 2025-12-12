@@ -30,19 +30,38 @@ CREATE TABLE wiki_change_events(
     event_title TEXT,
     UNIQUE(_h,event_wiki)
 ) PARTITION BY LIST(event_wiki);
+
+-- Partitioning based on field "event_wiki":
+-- Most queries have a WHERE condition filtering "event_wiki" -> they benefit
+-- Currently there is no partitioning based on timestamps
+--
+-- Note that the partitioning cannot be modified later without copying all data.
+--
+-- Breakdown for data collected in 2025-Nov and 2025-Dec:
+-- Smaller wikis that are subject of frequent queries
 CREATE TABLE wiki_change_events_dewiki
 	PARTITION OF wiki_change_events
 	FOR VALUES IN ('dewiki');
+
+-- Largest language edition: slightly above 10%
 CREATE TABLE wiki_change_events_enwiki
 	PARTITION OF wiki_change_events
 	FOR VALUES IN ('enwiki');
+
+-- The combined share of these two is slightly above 50%
 CREATE TABLE wiki_change_events_hightraffic
 	PARTITION OF wiki_change_events
 	FOR VALUES IN ('commonswiki','wikidatawiki');
+
+-- All other wikis in the stream go here
 CREATE TABLE wiki_change_events_otherwikis
 	PARTITION OF wiki_change_events DEFAULT;
 
---------
+----------------------------------------
+----------------------------------------
+----------------------------------------
+----------------------------------------
+----------------------------------------
 
 CREATE MATERIALIZED VIEW wiki_matview_countsall AS
 SELECT
