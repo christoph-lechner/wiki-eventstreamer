@@ -2,10 +2,11 @@ services:
   pgdatabase:
     image: postgres:18
     restart: on-failure
+    user: "1003:1003"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=wikidb
+      - POSTGRES_DB=postgres
     # postgres parameters determined using pgtune for 4GB of RAM
     command:
       - postgres
