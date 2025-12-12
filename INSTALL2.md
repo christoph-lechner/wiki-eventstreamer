@@ -4,12 +4,23 @@
 * install openssh server
 * hostname wikisrv
 
+This is the most complex step of the setup procedure.
+Throughout the configuration process, a few tests are described to verify that everything is working correctly.
+
+
 This is the resulting TCP port configuration:
 * 8080: HTTP pgadmin
 * 9080: HTTP Airflow
 * HTTP streamlit
 * HTTP database freshness status
 * 15432: postgreSQL
+
+These ports are not SSL-/TLS-encrypted, which is a critical requirement for production use.
+If you are operating with publicly visible hostnames, you might be able to use [Let's Encrypt](https://letsencrypt.org/) TLS.
+However, certificate renewal might result in unneeded difficulties (on Dec 2, 2025 they decrease certificate lifetimes to 45 days.).
+For postgreSQL, quick googling returned these documents:
+* https://codematters.medium.com/step-by-step-guide-automatic-ssl-certificates-for-your-postgresql-f24330e486c5
+* https://www.postgresql.org/docs/current/ssl-tcp.html
 
 ## Installation of Docker
 Following the official installation instructions
