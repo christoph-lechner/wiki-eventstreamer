@@ -6,7 +6,10 @@ Table of Contents
 * [Summary](#summary)
 * [Structure of the System](#structure-of-the-system)
 * [Technologies](#technologies)
+* [Installation](#installation)
 * [Details](#details)
+
+
 
 ## Summary
 Wikipedia is one of the largest collaborative knowledge projects in history. Every month, contributors around the world produce millions of edits. Understanding these changes (who makes them; which article is changed; ...) can be interesting for a wide range of reasons:
@@ -26,6 +29,8 @@ The received data is stored in gzip-compressed files (suitable for long-term arc
 The following screenshot from the [streamlit-based panels](sl/) indicates the hourly edit counts for several wikis over approximately two weeks.
 ![Screenshot of streamlit Panel](sl/img/screenshot_tt_01_cropped.png)
 
+
+
 ## Structure of the System
 ![Layout](doc/img/schematic.png)
 
@@ -34,6 +39,8 @@ The wikimedia event stream arriving via an SSL-encrypted connection is dumped to
 Resulting files are downloaded every hour via rsync/ssh to a local archive (storage on the source system is limited) and are imported/merged into the postgreSQL database using Apache Airflow [DAGs (directed acyclic graphs)](import_and_merge/airflow_dags/).
 The data stored in this postgreSQL database is available for visualization by a streamlit-based interactive [plotting solution](sl/) running inside the web browser or for other applications (see [below for more details](#details)). Access to the plotting solution is provided via an HTTPS reverse proxy server running Apache version 2.4.
 
+
+
 ## Technologies
 * OS: Ubuntu Server 24.04.3 LTS
 * PostgreSQL v18
@@ -41,6 +48,21 @@ The data stored in this postgreSQL database is available for visualization by a 
   * pytest
 * Apache Airflow 3.1.3
 * streamlit
+
+
+
+## Installation
+The installation procedure was structured in three parts based on the [structure of the system](#structure-of-the-system)
+* (1) [Data Collection](doc/INSTALL1.md)
+* (2) [Data Transfer](doc/INSTALL2.md)
+* (3) [Analysis](doc/INSTALL3.md)
+
+Not in all cases all steps need to be performed.
+
+For the preparation of the installation guide two virtual machines with fresh installations of Ubuntu Server 24.04.3 LTS were used.
+The step described in below documents can be readily adjusted to your specific environment.
+
+
 
 ## Details
 For many components of the system there are resources with more details:
