@@ -1,6 +1,8 @@
 services:
   streamlit:
-    image: streamlit
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: on-failure
     # in file '.env'
     # DB_DB=wikidb
