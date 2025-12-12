@@ -1,1 +1,4 @@
 **/__pycache__/
+
+# .env files can contain sensitive information such as credentials
+sl/.env

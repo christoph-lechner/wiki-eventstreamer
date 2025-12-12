@@ -11,16 +11,15 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 # CL: removed line to install package software-properties-common
 
-RUN git clone https://github.com/streamlit/streamlit-example.git .
-
 RUN pip3 install streamlit numpy pandas plotly
 RUN pip3 install "psycopg[binary,pool]"
 
-# CL: run streamlit as user with reduced priviledges (need to generate directory and adjust priviledges)
+# CL: run streamlit as user with reduced privileges (need to generate directory and adjust privileges)
+RUN groupadd -r appgroup && useradd -r -g appgroup -u 999 appuser
 RUN mkdir /.streamlit
-RUN chown 999 /.streamlit
-USER 999
+RUN chown appuser /.streamlit
 
+USER appuser:appgroup
 
 EXPOSE 8501
 
