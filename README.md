@@ -5,8 +5,8 @@ Christoph Lechner, Nov 2025
 Table of Contents
 * [Summary](#summary)
 * [Structure of the System](#structure-of-the-system)
-* [Technologies](#technologies)
 * [Installation](#installation)
+* [Technologies](#technologies)
 * [Details](#details)
 
 
@@ -41,16 +41,6 @@ The data stored in this postgreSQL database is available for visualization by a 
 
 
 
-## Technologies
-* OS: Ubuntu Server 24.04.3 LTS
-* PostgreSQL v18
-* Python 3.10 or newer
-  * pytest
-* Apache Airflow 3.1.3
-* streamlit
-
-
-
 ## Installation
 The installation procedure was structured in three parts based on the [structure of the system](#structure-of-the-system)
 * (1) [Data Collection](doc/INSTALL1.md)
@@ -60,7 +50,17 @@ The installation procedure was structured in three parts based on the [structure
 Not in all cases all steps need to be performed.
 
 For the preparation of the installation guide two virtual machines with fresh installations of Ubuntu Server 24.04.3 LTS were used.
-The step described in below documents can be readily adjusted to your specific environment.
+The procedure described in the installation guide can be readily adjusted to your specific environment.
+
+
+
+## Technologies
+* OS: Ubuntu Server 24.04.3 LTS
+* PostgreSQL v18
+* Python 3.10 or newer
+  * pytest
+* Apache Airflow 3.1.3
+* streamlit
 
 
 
