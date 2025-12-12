@@ -1,3 +1,6 @@
+# currently under development
+# C. Lechner, 2025-12
+
 FROM ubuntu:24.04
 
 ARG GIT_INFO=unspecified
@@ -31,6 +34,8 @@ WORKDIR /app
 
 VOLUME ["/data"]
 EXPOSE 8080
+
+ENV PYTHONUNBUFFERED=1
 
 # CMD ["/bin/bash"]
 CMD ["./wikistreamreader.py", "--outdir=/data/", "--status_port=8080"]

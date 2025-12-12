@@ -1,0 +1,14 @@
+services:
+  streamreader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # provide build argument by passing --build-arg GIT_INFO=abc
+      # (this cannot be passed using enviroment variable)
+      args: 
+        GIT_INFO: "${GIT_INFO:-xunspecified}"
+    volumes:
+      - "./datadir:/data"
+    ports:
+      - "9999:8080"
+    user: "1000:1000"
