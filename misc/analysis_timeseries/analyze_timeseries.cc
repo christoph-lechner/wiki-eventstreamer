@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		int curr_len = distance(it_earlier,it_later);
+		int curr_len = 1+distance(it_earlier,it_later); // "1+" because if both iterators point to identical element we consider it a series of length 1
 		it_earlier->len = curr_len;
 		if (curr_len>max_len) {
 			max_len = curr_len;
