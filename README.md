@@ -2,7 +2,7 @@
 Christoph Lechner, Nov 2025
 
 
-Table of Contents
+**Table of Contents**
 * [Summary](#summary)
 * [Structure of the System](#structure-of-the-system)
 * [Installation](#installation)
@@ -42,12 +42,12 @@ The data stored in this postgreSQL database is available for visualization by a 
 
 
 ## Installation
-The installation procedure was structured in three parts based on the [structure of the system](#structure-of-the-system)
+The installation procedure was structured in three parts based on the [structure of the system](#structure-of-the-system):
 * (1) [Data Collection](doc/INSTALL1.md)
 * (2) [Data Transfer](doc/INSTALL2.md)
 * (3) [Analysis](doc/INSTALL3.md)
 
-Not in all cases all steps need to be performed.
+Not in all cases all steps need to be performed. For instance, if you just want the tables to be populated, a combination of (1) and (2) might be sufficient.
 
 For the preparation of the installation guide two virtual machines with fresh installations of Ubuntu Server 24.04.3 LTS were used.
 The procedure described in the installation guide can be readily adjusted to your specific environment.
