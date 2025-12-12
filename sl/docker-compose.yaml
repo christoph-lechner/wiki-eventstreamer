@@ -10,7 +10,7 @@ services:
     # DB_PORT=15432
     env_file: .env
     volumes:
-      - "./app:/app"
+      - "./app:/app:ro"
     ports:
       - 8501:8501
 
