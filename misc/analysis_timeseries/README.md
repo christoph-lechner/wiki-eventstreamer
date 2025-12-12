@@ -19,7 +19,6 @@ FROM q
 ORDER BY c DESC
 LIMIT 1;
 ```
-(Note/FIXME: currently the result from the SQL query is larger by 1 compared to C++ result)
 
 ## C++ Solution
 ### Building it

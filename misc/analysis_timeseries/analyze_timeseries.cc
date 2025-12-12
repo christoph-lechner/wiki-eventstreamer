@@ -55,7 +55,9 @@ int main(int argc, char *argv[])
 			// look ahead: check if next element would still meet criterion
 			auto it_later_next = (it_later+1);
 			if  ( (it_later_next!=data.end())
-			   && (it_later_next->d-it_earlier->d)<max_deltat) {
+			   && ((it_later_next->d-it_earlier->d)<=max_deltat) )
+			                                     // ^ data points exactly on edge of time interval also meet time criterion
+			{
 				// not yet there -> proceed with loop
 				it_later = it_later_next;
 				continue;
@@ -68,6 +70,7 @@ int main(int argc, char *argv[])
 		if (curr_len>max_len) {
 			max_len = curr_len;
 			it_max = it_earlier;
+			/* remark: if there are multiple time windows with same element count, the earliest seen is reported */
 		}
 
 
@@ -78,6 +81,8 @@ int main(int argc, char *argv[])
 		kk++;
 #endif
 	}
+
+	/* optional future extension: sort array of structures using 'len' as key */
 
 	cout << "Longest burst of events with duration " << max_deltat << " begins at" << endl;
 	cout << "t0=" << fixed << it_max->d << ", len=" << it_max->len << endl;
