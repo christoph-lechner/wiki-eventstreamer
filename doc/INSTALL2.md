@@ -171,7 +171,7 @@ wikiproj@127.0.0.1:wikidb>
 ```
 
 ### Database Schema
-The database schema can be found in [doc/schema.sql] (doc/schema.sql).
+The database schema can be found in [schema.sql] (schema.sql).
 
 Apply it to generate the table structures in the newly created database.
 
@@ -250,11 +250,11 @@ Open the web browser and log in using user `airflow` and the password from the `
 
 We arrive at the start screen.
 
-![Airflow Start Screen](doc/img/install_20251211_airflow_initial_thumb.png)
+![Airflow Start Screen](img/install_20251211_airflow_initial_thumb.png)
 
 Especially the list of DAGs is still empty:
 
-![Airflow DAGs](doc/img/install_20251211_airflow_initial2_thumb.png)
+![Airflow DAGs](img/install_20251211_airflow_initial2_thumb.png)
 
 ### Adding the DAGs
 Let's add the DAGs for this project.
@@ -289,7 +289,7 @@ wikiproj@wikisrv:/srv/airflow/dags$
 
 Airflow periodically scans the directories, so after some time Airflow should list them under the menu point DAGs.
 
-![Airflow with DAGs detected](doc/img/install_20251211_airflow_initial_thumb.png)
+![Airflow with DAGs detected](img/install_20251211_airflow_initial_thumb.png)
 
 ### Set up the DB connection
 The value of `DB_CONN_ID` is the ID of the connection that needs to be defined in Airflow.
@@ -299,9 +299,9 @@ On the top-right "Add Connection".
 Enter the name `wikidb` and select connection type "Postgres" (it can take a few seconds until the list in the drop-down menu is prepared).
 Again, because we are connected to Airflow via HTTP (and not via HTTPS), all data we enter here could be eavesdropped!
 
-![Airflow DB Config](doc/img/install_20251211_airflow_DBconfig1_thumb.png)
+![Airflow DB Config](img/install_20251211_airflow_DBconfig1_thumb.png)
 
-![Airflow DB Config](doc/img/install_20251211_airflow_DBconfig2_thumb.png)
+![Airflow DB Config](img/install_20251211_airflow_DBconfig2_thumb.png)
 
 This is the only connection needed, in particular no file-system-related connections need to be set up as the current version of the script (as of 2025-Dec) assumes that everything is running on the local filesystem.
 
@@ -344,21 +344,21 @@ As expected, the file that was placed on the host in directory `/srv/wikidata/in
 To check the DB connection without launching any importer DAGs, a new DAG `db_conntest.py` was created while writing this installation guide.
 It was dropped into the directory `/srv/airflow/dags`.
 
-![Airflow Conntest DAG](doc/img/install_20251211_airflow_DBconntest1_thumb.png)
+![Airflow Conntest DAG](img/install_20251211_airflow_DBconntest1_thumb.png)
 
 You can manually trigger the DAG
 
-![Airflow Conntest DAG](doc/img/install_20251211_airflow_DBconntest2_thumb.png)
+![Airflow Conntest DAG](img/install_20251211_airflow_DBconntest2_thumb.png)
 
 and inspect the log to see that everything worked.
 
-![Airflow Conntest DAG](doc/img/install_20251211_airflow_DBconntest3_thumb.png)
+![Airflow Conntest DAG](img/install_20251211_airflow_DBconntest3_thumb.png)
 
-![Airflow Conntest DAG](doc/img/install_20251211_airflow_DBconntest4_thumb.png)
+![Airflow Conntest DAG](img/install_20251211_airflow_DBconntest4_thumb.png)
 
 To demonstrate what happens if the DB connection does not work, I changed the password in the configuration definition, and then the triggered DAG run fails.
 
-![Airflow Conntest DAG](doc/img/install_20251211_airflow_DBconntest_testbadpass_thumb.png)
+![Airflow Conntest DAG](img/install_20251211_airflow_DBconntest_testbadpass_thumb.png)
 
 
 
@@ -395,7 +395,7 @@ cl@wikisrv:/srv/airflow$ curl -X POST http://localhost:9080/api/v2/dags/db_connt
 ```
 This worked, the DAG run has been queued (the `logical_date` is in the future):
 
-![Screenshot Airflow: DAG run was triggered](doc/img/install_20251211_airflow_dagrun_triggered_thumb.png)
+![Screenshot Airflow: DAG run was triggered](img/install_20251211_airflow_dagrun_triggered_thumb.png)
 
 
 
@@ -659,16 +659,16 @@ and launch the script that will later be executed as cronjob. If this executes c
 /home/wikidata/prod_transfer/wiki-eventstreamer-transfer/run_cron.sh
 ```
 
-![Screenshot Transfer Script](doc/img/install_20251211_output_transferscript_thumb.png)
+![Screenshot Transfer Script](img/install_20251211_output_transferscript_thumb.png)
 
-![Airflow DAG Overview](doc/img/install_20251211_airflow_importrun_triggered_thumb.png)
+![Airflow DAG Overview](img/install_20251211_airflow_importrun_triggered_thumb.png)
 
 Exploring the DAG run (the very first time, the DAG run is triggered, it needs to be manually "switched on") by
 * clicking on the run
 * then on `op_importdatafiles`
 * then the log becomes visible (here stdout/stderr is collected)
 
-![Airflow Log Display](doc/img/install_20251211_airflow_importrun_log_thumb.png)
+![Airflow Log Display](img/install_20251211_airflow_importrun_log_thumb.png)
 
 The total run time of this import process was about 10 minutes.
 
