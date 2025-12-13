@@ -40,3 +40,9 @@ If everything worked as expected, this streamlit instance can be reached via HTT
 
 ![streamlit 1](img/install_20251211_streamlit1_thumb.png)
 ![streamlit 2](img/install_20251211_streamlit2_thumb.png)
+
+
+## Data Freshness Monitoring
+**to be written**
+
+using https://github.com/christoph-lechner/wiki-eventstreamer-qa-web

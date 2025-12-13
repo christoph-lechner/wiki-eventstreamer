@@ -3,22 +3,22 @@ Christoph Lechner, 2025-12-12
 
 **Navigation:** [Part 1](INSTALL1.md) -- [Part 2](INSTALL2.md) -- [Part 3](INSTALL3.md)
 
-Configuration of the virtual machine:
+Configuration of the second virtual machine:
 * 6GB RAM, 2 CPUs
 * 100GB of disk (70GB for `/`, 2GB for `/boot`)
 * installation with default configuration "Ubuntu Server"
 * install openssh server
 * hostname wikisrv
 
-This is the most complex step of the setup procedure.
+This is the most complex part of the setup procedure.
 Throughout the configuration process, a few tests are described to verify that everything is working correctly.
 
 
-This is the resulting TCP port configuration:
+This is the resulting TCP port configuration of the second virtual machine:
 * 8080: HTTP pgadmin
 * 9080: HTTP Airflow
-* HTTP streamlit
-* HTTP database freshness status
+* 8501: HTTP streamlit (will be configured in Part 3)
+* HTTP database freshness status (will be configured in Part 3)
 * 15432: postgreSQL
 
 These ports are not SSL-/TLS-encrypted, which is a critical requirement for production use.
@@ -173,7 +173,11 @@ wikiproj@127.0.0.1:wikidb>
 ### Database Schema
 The database schema can be found in [schema.sql] (schema.sql).
 
-Apply it to generate the table structures in the newly created database.
+To execute the queries in the file, in `pgcli` run
+```
+\i <path_to_schema.sql>
+```
+This generates the needed tables in the newly created database.
 
 ## Preparation of Apache Airflow
 Note that, as pointed out in [the Airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html), **this setup is not suitable for production use). inspecting the UID/GID inside the containers, the processes appear to be running with group ID 0.**
