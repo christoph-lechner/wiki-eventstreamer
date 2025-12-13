@@ -3,7 +3,7 @@ Christoph Lechner, 2025-12-13
 
 **Navigation:** [Overview](INSTALL.md) -- [Part 1](INSTALL1.md) -- [Part 2](INSTALL2.md) -- [Part 3](INSTALL3.md)
 
-![structure of system](doc/schematic_docstructure.png)
+![structure of system](img/schematic_docstructure.png)
 
 The image above illustrates the structure of the system and the organization of the installation guide. This is the color key:
 * blue: [Data Collection](INSTALL1.md)
