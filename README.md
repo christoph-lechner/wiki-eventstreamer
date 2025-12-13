@@ -42,9 +42,9 @@ The data stored in this postgreSQL database is available for visualization by a 
 
 
 ## Installation
-The installation procedure was structured in three parts based on the [structure of the system](#structure-of-the-system):
+The installation procedure was structured in three parts based on the structure of the system (see [here](doc/INSTALL.md) for overview):
 * (1) [Data Collection](doc/INSTALL1.md)
-* (2) [Data Transfer](doc/INSTALL2.md)
+* (2) [Data Loading and Storage](doc/INSTALL2.md), including data transfer
 * (3) [Analysis](doc/INSTALL3.md)
 
 Not in all cases all steps need to be performed. For instance, if you just want the tables to be populated, a combination of (1) and (2) might be sufficient.

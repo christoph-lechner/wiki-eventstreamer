@@ -1,7 +1,7 @@
 # Installation: Data Collection
 Christoph Lechner, 2025-12-11
 
-**Navigation:** [Part 1](INSTALL1.md) -- [Part 2](INSTALL2.md) -- [Part 3](INSTALL3.md)
+**Navigation:** [Overview](INSTALL.md) -- [Part 1](INSTALL1.md) -- [Part 2](INSTALL2.md) -- [Part 3](INSTALL3.md)
 
 
 **Remark 2025-Dec: Currently, implementation of automatic removal of very old files with streamdumps is still pending.**
