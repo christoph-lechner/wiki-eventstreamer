@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # C. Lechner, 2025-Dec-14
+# Maintenance script for machine running the stream data acquisition process.
 
 # One issue is that the filenames do not tell us the timezone.
 # - If this script is running on the same machine this is not an issue.
@@ -54,7 +55,8 @@ def file_action_report(fullpath:Path):
     print(f'reporting: too old file {str(fullpath)}')
 
 def file_action_del(fullpath:Path):
-    print(f'to be implemented: del action for {str(fullpath)}')
+    print(f'removing {str(fullpath)}')
+    os.remove(fullpath)
 
 def main(*,datadir=None, old_file_action=None, max_age_in_days=MAX_AGE_IN_DAYS_DEFAULT):
     if datadir is None:
