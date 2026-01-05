@@ -1,3 +1,4 @@
+# Setup of Maintenance Script
 CL, 2026-01-03
 
 The used version of `remove_old_streamdumps.py` is from git commit id 8f13034 (Dec 15, 2025, 19:58).
@@ -20,7 +21,7 @@ reporting: too old file /srv/wikiproj/streamdata_in/stream_20251211T002001_00000
 reporting: too old file /srv/wikiproj/streamdata_in/stream_20251212T230500_000048.gz.ready
 ```
 
-Once you are satisifed with the configuration, let's proceed.
+Once you are satisfied with the configuration, let's proceed.
 First of all, it is always a good idea to write a tar archive of your data directory so you can roll back in case you don't like the result. 
 Then, while logged in as `dataacq` user, run `crontab -e` command to add it to the crontab of user `dataacq` to schedule execution every day at midnight:
 ```
