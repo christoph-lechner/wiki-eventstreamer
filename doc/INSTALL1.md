@@ -218,7 +218,7 @@ On the other hand, if no event has been received in the previous 900 seconds (ti
 ## Maintenance Script
 For long-term operation a maintenance script is needed to curb disk space usage. 
 
-**Note that the data files are only deleted on the system writing the stream dumps.** On the second system running the database (set up in [part 2](./INSTALL2.md)), these files are long-term archived. This is essential because in case of future changes of the database schema (like adding additional columns), the database can be rebuilt with the additional information.
+**Note that the data files are only deleted on the system generating the stream dumps.** On the second system running the database (set up in [part 2](./INSTALL2.md)), these files are long-term archived. This is essential because in case of future changes of the database schema (like adding additional columns), the database can be rebuilt with the additional information.
 
 Notes taken while setting up the maintenance script on my installation can be found [in this repository](../notes/20260103-setup-removeold.md).
 
