@@ -4,11 +4,11 @@ Christoph Lechner, 2025-12-11
 **Navigation:** [Overview](INSTALL.md) -- [Part 1](INSTALL1.md) -- [Part 2](INSTALL2.md) -- [Part 3](INSTALL3.md)
 
 
-**Remark 2025-Dec: Currently, implementation of automatic removal of very old files with streamdumps is still pending.**
-
+## Preparation of Base Installation
 Virtual machine configured with
 * 2GB RAM
 * 30GB disk (in the setup process, 20GB for `/`, 2GB for `/boot`)
+  * Storage requirement for data files: In January 2026, 14 days of stream dumps (in gzipped-files) require about 8GB of storage. Therefore, the recommended amount of storage space for the data files is 20-30 GB.
 * installation with default configuration "Ubuntu Server"
 * install openssh server
 
@@ -214,3 +214,12 @@ cl@clpc:/tmp$
 GET requests are also supported.
 
 On the other hand, if no event has been received in the previous 900 seconds (time can be adjusted at the top of file `wikistreamreader.py`), then this HTTP request returns HTTP status 500 (Internal Server Error). A website monitoring tool will consider this status as "down" and trigger an alert.
+
+## Maintenance Script
+For long-term operation a maintenance script is needed to curb disk space usage. 
+
+**Note that the data files are only deleted on the system generating the stream dumps.** On the second system running the database (set up in [part 2](./INSTALL2.md)), these files are long-term archived. This is essential because in case of future changes of the database schema (like adding additional columns), the database can be rebuilt with the additional information.
+
+Notes taken while setting up the maintenance script on my installation can be found [in this repository](../notes/20260103-setup-removeold.md).
+
+To be specific, in January 2026, 14 days of stream dumps (in gzipped-files) require about 8GB of storage. Therefore, to be prepared for both long-time growth of edits and/or sudden activity bursts, the recommended amount of storage space is 20-30 GB.
