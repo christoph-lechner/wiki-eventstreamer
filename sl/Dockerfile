@@ -2,8 +2,6 @@
 
 FROM python:3.10-slim
 
-WORKDIR /app
-
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
@@ -16,8 +14,11 @@ RUN pip3 install "psycopg[binary,pool]"
 
 # CL: run streamlit as user with reduced privileges (need to generate directory and adjust privileges)
 RUN groupadd -r appgroup && useradd -r -g appgroup -u 999 appuser
-RUN mkdir /.streamlit
-RUN chown appuser /.streamlit
+RUN mkdir /home/appuser && \
+    chown appuser /home/appuser
+
+WORKDIR /app
+# COPY ./app /app
 
 USER appuser:appgroup
 
