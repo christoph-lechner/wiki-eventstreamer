@@ -18,7 +18,7 @@ RUN mkdir /home/appuser && \
     chown appuser /home/appuser
 
 WORKDIR /app
-# COPY ./app /app
+COPY ./app /app
 
 USER appuser:appgroup
 
