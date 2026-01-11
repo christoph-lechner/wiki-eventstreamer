@@ -32,7 +32,11 @@ def parsefn(fn):
     if m:
         ts_str = m.group(1) # first parenthesized subgroup
         # print(f'match: {ts_str}')
-        ts = datetime.datetime.fromisoformat(ts_str)
+
+        # In Python 3.11 (and later), datetime.datetime.fromisoformat can parse most ISO8601 formats (such as "20251127T210500" used here)
+        # ts = datetime.datetime.fromisoformat(ts_str)
+        # For Python 3.10, a different solution is needed
+        ts = datetime.datetime.strptime(ts_str, '%Y%m%dT%H%M%S')
         return FileInfo(is_valid_filename=True,fn=fn,ts=ts)
     return FileInfo(is_valid_filename=False,fn=fn)
 
