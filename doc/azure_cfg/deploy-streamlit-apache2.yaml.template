@@ -1,0 +1,56 @@
+apiVersion: 2019-12-01
+location: germanywestcentral
+name: streamlit--apache2-rev-proxy
+properties:
+  containers:
+  - name: streamlit
+    properties:
+      environmentVariables:
+        - name: DB_DBNAME
+          value: wikidb
+        - name: DB_USER
+          value: wikiproj_ro
+        - name: DB_HOST
+          value: <your_host>
+        - name: DB_PORT
+          value: <your_port>
+        - name: DB_PASSWORD
+          secureValue: <your_password>
+      image: <redacted>.azurecr.io/streamlit:v1
+      ports:
+        - port: 8501
+          protocol: TCP
+      resources:
+        requests:
+          cpu: 1.0
+          memoryInGB: 1.5
+  - name: apache2
+    properties:
+      environmentVariables:
+        - name: A2_PASSPHRASE
+          secureValue: passw0rd
+        - name: A2_PROXYREMOTE
+          secureValue: localhost:8501
+      image: <redacted>.azurecr.io/apache2-revproxy:v2
+      ports:
+        - port: 443
+          protocol: TCP
+      resources:
+        requests:
+          cpu: 1.0
+          memoryInGB: 1.5
+
+  osType: Linux
+  ipAddress:
+    type: Public
+    dnsNameLabel: aci-demo-cl
+    ports:
+      - port: 443
+        protocol: TCP
+  restartPolicy: Always
+  imageRegistryCredentials:
+    - server: <redacted>.azurecr.io
+      username: cldemo
+      password: <redacted>
+tags: null
+type: Microsoft.ContainerInstance/containerGroups
