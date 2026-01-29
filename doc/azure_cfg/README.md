@@ -9,8 +9,8 @@ For the streamlit application, using special Docker image built using git commit
 
 After building the image we need to upload it to the Azure Container Registry (ACR):
 ```
-$ docker tag streamlit:latest cldemo-<redacted>.azurecr.io/streamlit_test:v1
-$ docker image push cldemo-<redacted>.azurecr.io/streamlit_test:v1
+$ docker tag streamlit:latest cldemo-<redacted>.azurecr.io/streamlit:v1
+$ docker image push cldemo-<redacted>.azurecr.io/streamlit:v1
 ```
 
 ## Actual Deployment
