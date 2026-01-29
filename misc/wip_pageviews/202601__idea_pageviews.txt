@@ -1,0 +1,44 @@
+Notes
+
+Christoph Lechner, 2026-01-28
+
+Datasource:
+https://dumps.wikimedia.org/other/pageview_complete/readme.html
+https://dumps.wikimedia.org/other/pageview_complete/2026/2026-01/
+
+Another data source would be: https://dumps.wikimedia.org/other/pageviews/readme.html (don't remember why I decided to try the pageview_complete data first).
+
+The format downloaded from the website is text in a bzip2-compressed container. For the analyzed day (2026-01-27), the bzip2 container is about 750MB. After decompression, the size of data describing traffic for an entire day is on the order of 5GB.
+
+The file contains about 70M lines (it appears that only articles that had at least one hit are listed -> **verify this**).
+Here is a sample of the data format (one line per article and means of access desktop/mobile/app/...):
+```
+de.wikipedia Analysis 236 desktop 270 A14B13C11D12E10F10G9H11I13J18K14L11M12N11O14P11Q13R11S9T7U13V7W7X9
+```
+The letters `A`, `B`, `C`, ... are the hours of the day.
+
+
+To get information about a specific article, we need the ability to seek within the compressed dataset.
+'bgzip' could work, this is a blocked form of gzip, allowing to seek within the compressed data. The generated files can be decompressed using standard `gunzip` found on any Linux system. 
+
+
+Python package pysam is needed. https://pysam.readthedocs.io/en/latest/api.html
+Ubuntu package 'tabix' contains the bgzip program.
+
+Test compression performance:
+```
+cat pageviews-20260127-user | bgzip -l 9 -f > test.bgzip
+cat pageviews-20260127-user | gzip -9f > test.gz
+cat pageviews-20260127-user | bzip2 -f > test.bz2
+```
+The bz2 file has 751MB, gz has 977MB, and bgzip has 987MB.
+
+
+Sorting using binary ordering:
+```
+env LC_ALL=C sort pageviews-20260127-user > output.txt
+```
+Starting point for further research into Unicode sorting order: https://unix.stackexchange.com/a/564305
+
+
+Wrote first script, `prepare-pageviews.sh`. Processing time for `.bz` file containing traffic data of an entire day (compressed file size is 751MB) is about 3 minutes. The resulting `.gz` file containing only data for the two wikis of interest is 273MB).
