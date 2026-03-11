@@ -129,9 +129,6 @@ The default passwords for postgres and pgadmin need to be changed. Note that the
 postgres@127.0.0.1:postgres> CREATE USER wikiproj WITH PASSWORD 'your_password';
 CREATE ROLE
 Time: 0.023s
-postgres@127.0.0.1:postgres> CREATE DATABASE wikidb OWNER wikidb;
-role "wikidb" does not exist
-Time: 0.026s
 postgres@127.0.0.1:postgres> CREATE DATABASE wikidb OWNER wikiproj;
 CREATE DATABASE
 Time: 0.114s
