@@ -7,6 +7,8 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=postgres
+    # increase shm_size: 50% more than shared_buffers parameter
+    shm_size: '1.5gb'
     # postgres parameters determined using pgtune for 4GB of RAM
     command:
       - postgres
